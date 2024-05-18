@@ -16,7 +16,7 @@ const defaultProps = {
     pr: null,
 };
 
-const ListItemPull = (props) => {
+function ListItemPull(props) {
     const pr = props.pr || props.data;
     const repoPrefix = pr.repository ? `[${pr.repository.name}]` : '';
 
@@ -121,7 +121,7 @@ const ListItemPull = (props) => {
             {pr.isCPlusApproved && <span className="Counter ml-1" role="img" aria-label="C+ reviewed">C+🎀</span>}
         </div>
     );
-};
+}
 
 ListItemPull.propTypes = propTypes;
 ListItemPull.defaultProps = defaultProps;

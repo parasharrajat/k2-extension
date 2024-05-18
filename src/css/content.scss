@@ -142,12 +142,13 @@ $color-dark-yellow: #daa520;
     width: 100%;
 }
 .panel {
-    border: 1px solid $color-neutral-light;
-    border-radius: 3px;
-    &.hourly {
-        .label {
-            display: none;
-        }
+  border: 1px solid $color-neutral-light;
+  border-radius: 8px;
+  overflow: hidden;
+  &.hourly {
+    .label {
+      display: none;
+    }
 
         .panel-title {
             background-color: $color-alert;
@@ -239,9 +240,9 @@ $color-dark-yellow: #daa520;
 }
 
 .panel-item {
-    border-top: 1px solid $color-neutral-light;
-    display: block;
-    padding: $gutter;
+  border-top: 1px solid $color-neutral-light;
+  display: block;
+  padding: 4px 8px;
     .AvatarStack {
         display: inline-block !important;
         float: right !important;
@@ -268,8 +269,18 @@ $color-dark-yellow: #daa520;
 .issue {
     line-height: 1em;
 
-    &:hover {
-        text-decoration: none;
+  &:hover {
+    text-decoration: none;
+  }
+  // define before overdue so overdue issues will still appears red, since
+  // issue erosion still happens for "held issues"
+  &.help-wanted,
+  &.challenge-sent,
+  &.hold,
+  &.nonowner {
+    color: darken($color-neutral-light, 20%) !important;
+    .issue-link {
+      color: darken($color-neutral-light, 20%) !important;
     }
     // define before overdue so overdue issues will still appears red, since
     // issue erosion still happens for "held issues"
@@ -639,4 +650,19 @@ $color-dark-yellow: #daa520;
   color: $color-alert;
   font-weight: bold;
   margin: 8px 16px;
+}
+
+.issue-filter {
+  border-radius: 8px;
+  background: none;
+  border: 1px solid rgb(221, 221, 221);
+}
+
+@media (prefers-color-scheme: dark) {
+  .panel, .panel-item, .issue-filter {
+     border-color: rgb(48, 54, 61);
+  }
+  .issue-filter {
+     color: rgb(230, 237, 243)
+  }
 }

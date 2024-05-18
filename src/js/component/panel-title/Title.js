@@ -16,13 +16,15 @@ const defaultProps = {
     onClick: () => {},
 };
 
-const Title = props => (
-    <div tabIndex="0" role="button" onClick={props.onClick}>
-        <h3 className="panel-title">
-            {`${props.text} ${props.count !== null ? `(${props.count})` : ''}`}
-        </h3>
-    </div>
-);
+function Title(props) {
+    return (
+        <div tabIndex="0" role="button" onClick={props.onClick}>
+            <h3 className="panel-title">
+                {`${props.text} ${props.count !== null ? `(${props.count})` : ''}`}
+            </h3>
+        </div>
+    );
+}
 
 Title.propTypes = propTypes;
 Title.defaultProps = defaultProps;

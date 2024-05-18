@@ -32,6 +32,15 @@ const propTypes = {
     // eslint-disable-next-line react/forbid-prop-types
     panel: PropTypes.object,
     panelID: PropTypes.string.isRequired,
+
+    /** If the issue is on HOLD, hide it */
+    hideIfHeld: PropTypes.bool,
+
+    /** If the issue is under review, hide it */
+    hideIfUnderReview: PropTypes.bool,
+
+    /** If the issue is owned by someone else, hide it */
+    hideIfOwnedBySomeoneElse: PropTypes.bool,
 };
 const defaultProps = {
     filters: {
@@ -43,14 +52,39 @@ const defaultProps = {
     applyFilters: false,
     hideOnEmpty: false,
     panel: {},
+    hideIfHeld: false,
+    hideIfUnderReview: false,
+    hideIfOwnedBySomeoneElse: false,
 };
 
-const PanelIssues = (props) => {
+function PanelIssues(props) {
     let filteredData = props.data;
 
     const collapseContent = useCallback(() => {
         togglePanel(props.panelID, !props.panel.isHidden);
     }, [props.panel]);
+
+    if (props.hideIfHeld || props.hideIfUnderReview || props.hideIfOwnedBySomeoneElse) {
+        filteredData = _.filter(props.data, (item) => {
+            const isHeld = item.title.toLowerCase().indexOf('[hold') > -1 ? ' hold' : '';
+            const isUnderReview = _.find(item.labels, label => label.name.toLowerCase() === 'reviewing');
+            const isOwnedBySomeoneElse = item.issueHasOwner && !item.currentUserIsOwner;
+
+            if (isHeld && props.hideIfHeld) {
+                return false;
+            }
+
+            if (isUnderReview && props.hideIfUnderReview) {
+                return false;
+            }
+
+            if (isOwnedBySomeoneElse && props.hideIfOwnedBySomeoneElse) {
+                return false;
+            }
+
+            return true;
+        });
+    }
 
     // We need to be sure to filter the data if the user has set any filters
     if (props.applyFilters && props.filters && !_.isEmpty(props.filters)) {
@@ -99,7 +133,7 @@ const PanelIssues = (props) => {
 
         </div>
     );
-};
+}
 
 PanelIssues.propTypes = propTypes;
 PanelIssues.defaultProps = defaultProps;

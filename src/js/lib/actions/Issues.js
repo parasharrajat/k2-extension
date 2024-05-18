@@ -3,120 +3,123 @@ import moment from 'moment';
 import _ from 'underscore';
 import * as API from '../api';
 import ONYXKEYS from '../../ONYXKEYS';
+import ActionThrottle from '../ActionThrottle';
 
 function getWAQ() {
-    Promise.all([
-        API.getWAQIssues(),
-        API.getCPlusApprovedIssues(API.getCurrentUser()),
-    ])
-        .then(([issues, approvedIssues]) => {
-            _.each(_.keys(issues), (issueId) => {
-                if (!_.has(approvedIssues, issueId)) {
-                    return;
-                }
-                // eslint-disable-next-line no-param-reassign
-                issues[issueId].isCPlusApproved = true;
-            });
+    ActionThrottle('getWAQ', () => (
+        Promise.all([
+            API.getWAQIssues(),
+            API.getCPlusApprovedIssues(API.getCurrentUser()),
+        ])
+            .then(([issues, approvedIssues]) => {
+                _.each(_.keys(issues), (issueId) => {
+                    if (!_.has(approvedIssues, issueId)) {
+                        return;
+                    }
+                    // eslint-disable-next-line no-param-reassign
+                    issues[issueId].isCPlusApproved = true;
+                });
 
-            // Always use set() here because there is no way to remove issues from Onyx
-            // that get closed or assigned
-            ReactNativeOnyx.set(ONYXKEYS.ISSUES.WAQ, issues);
-        });
+                // Always use set() here because there is no way to remove issues from Onyx
+                // that get closed or assigned
+                ReactNativeOnyx.set(ONYXKEYS.ISSUES.WAQ, issues);
+            })
+    ));
 }
 
 function getDailyImprovements() {
-    API.getDailyImprovements()
-        .then((issues) => {
-            // Always use set() here because there is no way to remove issues from Onyx
-            // that get closed and are no longer assigned
-            ReactNativeOnyx.set(ONYXKEYS.ISSUES.DAILY_IMPROVEMENTS, issues);
-        });
+    ActionThrottle('getDailyImprovements', () => (
+        API.getDailyImprovements()
+            .then((issues) => {
+                // Always use set() here because there is no way to remove issues from Onyx
+                // that get closed and are no longer assigned
+                ReactNativeOnyx.set(ONYXKEYS.ISSUES.DAILY_IMPROVEMENTS, issues);
+            })
+    ));
 }
 
 function getAllAssigned() {
-    Promise.all([
-        API.getIssuesAssigned(),
-        API.getCPlusApprovedIssues(API.getCurrentUser()),
-    ])
-        .then(([issues, approvedIssues]) => {
-            const currentUser = API.getCurrentUser();
-            const issuesMarkedWithOwner = _.reduce(issues, (finalObject, issue) => {
-                const regexResult = issue.body.match(/Current Issue Owner:\s@(?<owner>\S+)/i);
-                const currentOwner = regexResult && regexResult.groups && regexResult.groups.owner;
-                if (!currentOwner || currentOwner !== currentUser) {
+    ActionThrottle('getAllAssigned', () => (
+        Promise.all([
+            API.getIssuesAssigned(),
+            API.getCPlusApprovedIssues(API.getCurrentUser()),
+        ])
+            .then(([issues, approvedIssues]) => {
+                const currentUser = API.getCurrentUser();
+                const issuesMarkedWithOwner = _.reduce(issues, (finalObject, issue) => {
+                    const regexResult = issue.body.match(/Current Issue Owner:\s@(?<owner>\S+)/i);
+                    const currentOwner = regexResult && regexResult.groups && regexResult.groups.owner;
                     return {
                         ...finalObject,
-                        [issue.id]: issue,
+                        [issue.id]: {
+                            ...issue,
+                            issueHasOwner: Boolean(currentOwner),
+                            currentUserIsOwner: currentOwner && currentOwner === currentUser,
+                            isCPlusApproved: _.has(approvedIssues, issue.id),
+                        },
                     };
-                }
+                }, {});
 
-                return {
-                    ...finalObject,
-                    [issue.id]: {
-                        ...issue,
-                        currentUserIsOwner: true,
-                        isCPlusApproved: _.has(approvedIssues, issue.id),
-                    },
-                };
-            }, {});
-
-            // Always use set() here because there is no way to remove issues from Onyx
-            // that get closed and are no longer assigned
-            ReactNativeOnyx.set(ONYXKEYS.ISSUES.ASSIGNED, issuesMarkedWithOwner);
-        });
+                // Always use set() here because there is no way to remove issues from Onyx
+                // that get closed and are no longer assigned
+                ReactNativeOnyx.set(ONYXKEYS.ISSUES.ASSIGNED, issuesMarkedWithOwner);
+            })
+    ));
 }
 
 function getEngineering() {
-    API.getEngineeringIssues().then((issues) => {
-        // Set the type of the item to be the label we are looking for
-        const sortedData = _.chain(issues)
-            .map((item) => {
-                const modifiedItem = {...item};
-                modifiedItem.type = 'engineering';
+    ActionThrottle('getEngineering', () => (
+        API.getEngineeringIssues().then((issues) => {
+            // Set the type of the item to be the label we are looking for
+            const sortedData = _.chain(issues)
+                .map((item) => {
+                    const modifiedItem = {...item};
+                    modifiedItem.type = 'engineering';
 
-                const age = moment().diff(item.created_at, 'days');
-                const isImprovement = _.findWhere(item.labels, {name: 'Improvement'});
-                const isTask = _.findWhere(item.labels, {name: 'Task'});
-                const isFeature = _.findWhere(item.labels, {name: 'NewFeature'});
-                const isHourly = _.findWhere(item.labels, {name: 'Hourly'});
-                const isDaily = _.findWhere(item.labels, {name: 'Daily'});
-                const isWeekly = _.findWhere(item.labels, {name: 'Weekly'});
-                const isMonthly = _.findWhere(item.labels, {name: 'Monthly'});
-                const isFirstPick = _.findWhere(item.labels, {name: 'FirstPick'});
-                const isWhatsNext = _.findWhere(item.labels, {name: 'WhatsNext'});
-                let score = 0;
+                    const age = moment().diff(item.created_at, 'days');
+                    const isImprovement = _.findWhere(item.labels, {name: 'Improvement'});
+                    const isTask = _.findWhere(item.labels, {name: 'Task'});
+                    const isFeature = _.findWhere(item.labels, {name: 'NewFeature'});
+                    const isHourly = _.findWhere(item.labels, {name: 'Hourly'});
+                    const isDaily = _.findWhere(item.labels, {name: 'Daily'});
+                    const isWeekly = _.findWhere(item.labels, {name: 'Weekly'});
+                    const isMonthly = _.findWhere(item.labels, {name: 'Monthly'});
+                    const isFirstPick = _.findWhere(item.labels, {name: 'FirstPick'});
+                    const isWhatsNext = _.findWhere(item.labels, {name: 'WhatsNext'});
+                    let score = 0;
 
-                // Sort by K2
-                score += isHourly ? 10000000 : 0;
-                score += isDaily ? 1000000 : 0;
-                score += isWeekly ? 100000 : 0;
-                score += isMonthly ? 10000 : 0;
+                    // Sort by K2
+                    score += isHourly ? 10000000 : 0;
+                    score += isDaily ? 1000000 : 0;
+                    score += isWeekly ? 100000 : 0;
+                    score += isMonthly ? 10000 : 0;
 
-                // WhatsNext issues should be at the top of each KSV2 group
-                score += isWhatsNext ? 9000 : 0;
+                    // WhatsNext issues should be at the top of each KSV2 group
+                    score += isWhatsNext ? 9000 : 0;
 
-                // First picks go above improvements
-                score += isFirstPick ? 1050 : 0;
+                    // First picks go above improvements
+                    score += isFirstPick ? 1050 : 0;
 
-                // All improvements are at the top, followed by tasks, followed by features
-                score += isImprovement ? 1000 : 0;
-                score += isTask ? 500 : 0;
-                score += isFeature ? 500 : 0;
+                    // All improvements are at the top, followed by tasks, followed by features
+                    score += isImprovement ? 1000 : 0;
+                    score += isTask ? 500 : 0;
+                    score += isFeature ? 500 : 0;
 
-                // Sort by age too
-                score += age / 100;
+                    // Sort by age too
+                    score += age / 100;
 
-                modifiedItem.score = score;
-                modifiedItem.age = age;
-                return modifiedItem;
-            })
-            .sortBy('score')
-            .value();
+                    modifiedItem.score = score;
+                    modifiedItem.age = age;
+                    return modifiedItem;
+                })
+                .sortBy('score')
+                .value();
 
-        // Always use set() here because there is no way to remove issues from Onyx
-        // that have the engineering label removed
-        ReactNativeOnyx.set(ONYXKEYS.ISSUES.ENGINEERING, _.indexBy(sortedData.reverse(), 'id'));
-    });
+            // Always use set() here because there is no way to remove issues from Onyx
+            // that have the engineering label removed
+            ReactNativeOnyx.set(ONYXKEYS.ISSUES.ENGINEERING, _.indexBy(sortedData.reverse(), 'id'));
+        })
+    ));
 }
 
 /**
