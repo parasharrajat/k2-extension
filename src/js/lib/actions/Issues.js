@@ -38,6 +38,29 @@ function getDailyImprovements() {
     ));
 }
 
+function isMoreThan24HoursOld(timeString) {
+    // Parse the time string into a Date object
+    const time = new Date(timeString);
+
+    // Check if parsing failed (invalid format)
+    // eslint-disable-next-line no-restricted-globals
+    if (isNaN(time.getTime())) {
+        return false; // Or throw an error if you prefer
+    }
+
+    // Get the current timestamp in milliseconds
+    const now = Date.now();
+
+    // Calculate the difference in milliseconds between now and the parsed time
+    const timeDiff = now - time.getTime();
+
+    // One day in milliseconds
+    const oneDay = 24 * 60 * 60 * 1000;
+
+    // Return true if the difference is more than 24 hours
+    return timeDiff > oneDay;
+}
+
 function getAllAssigned() {
     ActionThrottle('getAllAssigned', () => (
         Promise.all([
@@ -53,12 +76,16 @@ function getAllAssigned() {
                         ...finalObject,
                         [issue.id]: {
                             ...issue,
+                            // eslint-disable-next-line es/no-optional-chaining
+                            isAboutToBeOverdue: isMoreThan24HoursOld(_.find(issue.comments.nodes, c => c.author.login === API.getCurrentUser())?.updatedAt),
                             issueHasOwner: Boolean(currentOwner),
                             currentUserIsOwner: currentOwner && currentOwner === currentUser,
                             isCPlusApproved: _.has(approvedIssues, issue.id),
                         },
                     };
                 }, {});
+
+                console.debug('issues', issuesMarkedWithOwner);
 
                 // Always use set() here because there is no way to remove issues from Onyx
                 // that get closed and are no longer assigned

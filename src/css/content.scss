@@ -321,6 +321,10 @@ $color-dark-yellow: #daa520;
     &.contributor-assigned {
         color: $color-light-purple;
     }
+
+    .aboutobedue{
+        color: $color-alert !important;
+    }
 }
 
 // Add some padding when we put issues in a box-row

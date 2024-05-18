@@ -58,7 +58,7 @@ function getRequestParams() {
 function getMilestones() {
     const graphQLQuery = `
 {
-    repository(name: "expensify", owner: "expensify") {
+    repository(name: "app", owner: "expensify") {
         milestones(first: 100, states: OPEN) {
             nodes {
                 title
@@ -322,30 +322,40 @@ function getIssues(assignee = 'none', labels) {
                 }
                 nodes {
                     ... on Issue {
-                        title
-                        id
-                        url
-                        createdAt
-                        updatedAt
-                        body
-                        assignees(first: 100) {
-                          nodes {
-                            avatarUrl
-                            login
-                          }
-                        }
-                        labels(first: 100) {
-                            nodes {
-                                name
-                            }
-                        }
-                        milestone {
-                            id
+                    title
+                    id
+                    url
+                    createdAt
+                    updatedAt
+                    body
+                    assignees(first: 100) {
+                        nodes {
+                        avatarUrl
+                        login
                         }
                     }
+                    labels(first: 100) {
+                        nodes {
+                        name
+                        }
+                    }
+                    milestone {
+                        id
+                    }
+                    # Get comments with latest one first
+                    comments(first: 50, orderBy: { field: UPDATED_AT, direction: DESC }) {
+                      nodes {
+                        updatedAt
+                        body
+                        author {
+                            login
+                        }
+                      }
+                    }
+                }
                 }
             }
-        }
+            }
     `;
 
     return getFullResultsUsingPagination(graphQLQuery)

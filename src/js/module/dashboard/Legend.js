@@ -35,6 +35,7 @@ function Legend() {
 
             <br />
             <div className="issue reviewing">Under Review</div>
+            <div className="issue overdue">⏲ About to Overdue</div>
             <div className="issue overdue">Overdue</div>
             <div className="issue planning">Planning</div>
             <div className="issue contributor-assigned">Contributor Assigned</div>

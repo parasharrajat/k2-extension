@@ -48,6 +48,7 @@ class ListItemIssue extends React.Component {
         this.isWhatsNext = _.findWhere(this.props.issue.labels, {name: 'WhatsNext'}) ? <span className="label whatsnext">WN</span> : null;
         this.isPlanning = _.findWhere(this.props.issue.labels, {name: 'Planning'}) ? ' planning' : '';
         this.isOverdue = _.findWhere(this.props.issue.labels, {name: 'Overdue'});
+        this.isAboutTobeOverdue = this.props.issue.isAboutToBeOverdue ? <span className=" aboutobedue">⏲</span> : null;
         this.isWaitingOnCustomer = _.findWhere(this.props.issue.labels, {name: 'Waiting for customer'}) ? ' waiting-for-customer' : '';
         this.isHeld = this.props.issue.title.toLowerCase().indexOf('[hold') > -1 ? ' hold' : '';
         this.isChallengeSent = _.findWhere(this.props.issue.labels, {name: 'Take Home Challenge Sent'}) ? ' challenge-sent' : '';
@@ -79,6 +80,7 @@ class ListItemIssue extends React.Component {
                     target="_blank"
                     rel="noopener noreferrer"
                 >
+                    {this.isAboutTobeOverdue}
                     {this.isHourly}
                     {this.isDaily}
                     {this.isWeekly}
