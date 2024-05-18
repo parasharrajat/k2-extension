@@ -42,7 +42,7 @@ const propTypes = {
 };
 
 const defaultProps = {
-    cPlusPaymentStatus: {},
+    cPlusPaymentStatus: '',
 };
 
 class Request extends React.Component {
@@ -60,7 +60,7 @@ class Request extends React.Component {
             shouldShowConfirmationMessage: false,
             participationComment: '',
             selectedButton: {},
-            amount: 1000,
+            amount: 250,
             ...this.labels,
         };
     }

@@ -140,7 +140,7 @@ $
                                     </div>
                                 </div>
                                 <div className="d-flex flex-row">
-                                    <div className="col-5 pr-4">
+                                    <div className="col-8 pr-4">
                                         <div className="border p-3 rounded">
                                             <h5 className="h4 mb-2 text-light">
 Pending Requests
@@ -157,7 +157,7 @@ Pending Requests
                                             })}
                                         </div>
                                     </div>
-                                    <div className="col-5 pr-4">
+                                    <div className="col-4 pr-4">
                                         <div className="border p-3 rounded">
                                             <h5 className="h4 mb-2 text-light">
 Requested
