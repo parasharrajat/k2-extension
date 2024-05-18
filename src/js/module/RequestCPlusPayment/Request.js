@@ -1,3 +1,4 @@
+// eslint-disable-next-line no-unused-vars
 import $ from 'jquery';
 import _ from 'underscore';
 import React from 'react';
@@ -223,7 +224,7 @@ class Request extends React.Component {
                     <input
                         ref={el => this.input = el}
                         type="text"
-                        htmlid="amount"
+                        id="amount"
                         name="amount"
                         value={this.state.amount}
                         onChange={e => this.setState({amount: e.target.value})}
@@ -237,7 +238,7 @@ class Request extends React.Component {
                             aria-label="Requested"
                             onClick={() => this.clickNSave('Requested')}
                         >
-                        Requested
+                            Requested
                         </button>
                         <button
                             type="button"
@@ -245,7 +246,7 @@ class Request extends React.Component {
                             aria-label="Pending Payment"
                             onClick={() => this.clickNSave('Pending Payment')}
                         >
-                        Pending Payment
+                            Pending Payment
                         </button>
                     </BtnGroup>
                 </div>

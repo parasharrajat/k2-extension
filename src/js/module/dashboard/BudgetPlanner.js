@@ -1,3 +1,4 @@
+/* eslint-disable es/no-optional-chaining */
 import React from 'react';
 import _ from 'underscore';
 import PropTypes from 'prop-types';
@@ -26,6 +27,7 @@ class BudgetPlanner extends React.Component {
         this.state = {
             pendingAmount: 0,
             futureAmount: 0,
+            // eslint-disable-next-line react/no-unused-state
             predictions: 0,
         };
     }
@@ -105,7 +107,7 @@ class BudgetPlanner extends React.Component {
                                         <div>
                                             <h5>Pending Jobs&apos;</h5>
                                             <p className="amount">
-$
+                                                $
                                                 {this.state.pendingAmount}
                                             </p>
                                         </div>
@@ -115,7 +117,7 @@ $
                                         <div>
                                             <h5>Future Jobs&apos;</h5>
                                             <p className="amount">
-$
+                                                $
                                                 {this.state.futureAmount}
                                             </p>
                                         </div>
@@ -143,13 +145,13 @@ $
                                     <div className="col-8 pr-4">
                                         <div className="border p-3 rounded">
                                             <h5 className="h4 mb-2 text-light">
-Pending Requests
+                                                Pending Requests
                                             </h5>
                                             {_.map(pendingRequests, (key) => {
                                                 const id = getIDfromCollectionkey(ONYXKEYS.COLLECTION.C_PLUS_PAYMENT_STATUS, key);
                                                 return (
                                                     <a className="IssueLabel color-bg-severe-emphasis color-fg-on-emphasis" href={`https://github.com/Expensify/App/issues/${id}`}>
-                                                            #
+                                                        #
                                                         {id}
                                                         <span className="IssueLabel IssueAmountLabel color-bg-subtle color-fg-severe">{this.props.cPlusStatus[key]?.amount}</span>
                                                     </a>
@@ -160,13 +162,13 @@ Pending Requests
                                     <div className="col-4 pr-4">
                                         <div className="border p-3 rounded">
                                             <h5 className="h4 mb-2 text-light">
-Requested
+                                                Requested
                                             </h5>
                                             {_.map(requestedRequests, (key) => {
                                                 const id = getIDfromCollectionkey(ONYXKEYS.COLLECTION.C_PLUS_PAYMENT_STATUS, key);
                                                 return (
                                                     <a className="IssueLabel color-bg-open-emphasis color-fg-on-emphasis" href={`https://github.com/Expensify/App/issues/${id}`}>
-                                                            #
+                                                        #
                                                         {id}
                                                         <span className="IssueLabel IssueAmountLabel color-bg-subtle color-fg-emphasis">{this.props.cPlusStatus[key]?.amount}</span>
                                                     </a>

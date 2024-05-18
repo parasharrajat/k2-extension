@@ -3,7 +3,7 @@ import _ from 'underscore';
 import PropTypes from 'prop-types';
 import {withOnyx} from 'react-native-onyx';
 import * as Issues from '../../lib/actions/Issues';
-import PanelIssues from '../../component/Panel/PanelIssues';
+import PanelIssues from '../../component/panel/PanelIssues';
 import ONYXKEYS from '../../ONYXKEYS';
 import IssuePropTypes from '../../component/list-item/IssuePropTypes';
 import filterPropTypes from '../../lib/filterPropTypes';
@@ -75,6 +75,7 @@ class ListIssuesAssigned extends React.Component {
 
         return filteredIssues;
     }
+
     toggleHeldFilter() {
         this.setState(prevState => ({shouldHideHeldIssues: !prevState.shouldHideHeldIssues}));
     }

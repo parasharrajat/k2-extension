@@ -122,7 +122,7 @@ function PanelIssues(props) {
             <div className={`collapse ${props.panel.isHidden ? 'hidden' : ''}`}>
                 {!_.size(props.data) ? (
                     <div className="blankslate capped clean-background">
-                    No items
+                        No items
                     </div>
                 ) : (
                     <div>

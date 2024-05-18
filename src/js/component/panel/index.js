@@ -31,7 +31,7 @@ const defaultProps = {
     children: undefined,
 };
 
-const Panel = (props) => {
+function Panel(props) {
     const collapseContent = useCallback(() => {
         togglePanel(props.panelID, !props.panel.isHidden);
     }, [props.panel]);
@@ -50,7 +50,7 @@ const Panel = (props) => {
             <div className={`collapse ${props.panel.isHidden ? 'hidden' : ''}`}>
                 {!props.children ? (
                     <div className="blankslate capped clean-background">
-                    No items
+                        No items
                     </div>
                 ) : (
                     <div>
@@ -61,16 +61,13 @@ const Panel = (props) => {
 
         </div>
     );
-};
+}
 
 Panel.propTypes = propTypes;
 Panel.defaultProps = defaultProps;
 Panel.displayName = 'PanelIssues';
 
 export default withOnyx({
-    filters: {
-        key: ONYXKEYS.ISSUES.FILTER,
-    },
     panel: {
         key: ({panelID}) => `${ONYXKEYS.PANEL}${panelID}`,
     },

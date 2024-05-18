@@ -16,24 +16,26 @@ const propTypes = {
     pollInterval: PropTypes.number.isRequired,
 };
 
-const Dashboard = props => (
-    <div className="issueList">
-        <Legend />
-        <MainFilters />
-        <ListPRsReviewing pollInterval={props.pollInterval * 2.5} />
-        <BudgetPlanner />
+function Dashboard(props) {
+    return (
+        <div className="issueList">
+            <Legend />
+            <MainFilters />
+            <ListPRsReviewing pollInterval={props.pollInterval * 2.5} />
+            <BudgetPlanner />
 
-        <ListIssuesAssigned pollInterval={props.pollInterval} />
+            <ListIssuesAssigned pollInterval={props.pollInterval} />
 
-        <ListPRsAssigned pollInterval={props.pollInterval * 2.5} />
+            <ListPRsAssigned pollInterval={props.pollInterval * 2.5} />
 
-        <ListIssuesWAQ pollInterval={props.pollInterval * 2.5} />
+            <ListIssuesWAQ pollInterval={props.pollInterval * 2.5} />
 
-        <Filters />
+            <Filters />
 
-        <ListIssuesEngineering pollInterval={props.pollInterval * 2.5} />
-    </div>
-);
+            <ListIssuesEngineering pollInterval={props.pollInterval * 2.5} />
+        </div>
+    );
+}
 
 Dashboard.propTypes = propTypes;
 

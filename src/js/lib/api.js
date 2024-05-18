@@ -481,7 +481,8 @@ function getCPlusApprovedPr(approver) {
 
     return getFullResultsUsingPagination(graphQLQuery)
         .then(formatIssueResults);
-    }
+}
+
 /**
  * @returns {Promise}
  */

@@ -1,10 +1,12 @@
 import React from 'react';
+// eslint-disable-next-line no-unused-vars
 import ReactNativeOnyx from 'react-native-onyx';
 import * as Preferences from '../../lib/actions/Preferences';
 
 function Legend() {
     function signOut() {
         Preferences.setGitHubToken('');
+
         // ReactNativeOnyx.clear();
         window.location.reload();
     }

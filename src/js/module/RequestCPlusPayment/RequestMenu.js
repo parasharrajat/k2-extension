@@ -8,6 +8,7 @@ export default function () {
     const issueDetails = getCurrentIssueDetails();
     return {
         draw() {
+            // eslint-disable-next-line react/no-deprecated
             ReactDOM.render(
                 <Request issueID={issueDetails.issue_number} />,
                 document.getElementsByClassName('k2request-wrapper')[0],

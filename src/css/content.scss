@@ -21,7 +21,7 @@ $color-darker-green: #2cb528;
 $color-dark-yellow: #daa520;
 
 .owner {
-  color: $color-dark-yellow !important;
+    color: $color-dark-yellow !important;
 }
 
 .k2dashboard,
@@ -84,7 +84,8 @@ $color-dark-yellow: #daa520;
     background-color: #00a4d3 !important;
     color: white;
 }
-.k2-ops.active, .k2-requested.active {
+.k2-ops.active,
+.k2-requested.active {
     background-color: #37916c !important;
     color: white;
 }
@@ -96,7 +97,8 @@ $color-dark-yellow: #daa520;
     background-color: #604c8d !important;
     color: white;
 }
-.k2-task.active, .k2-pending-payment.active{
+.k2-task.active,
+.k2-pending-payment.active {
     background-color: #9c5959 !important;
     color: white;
 }
@@ -120,7 +122,7 @@ $color-dark-yellow: #daa520;
 .discussion-sidebar-item h6 {
     margin-bottom: 8px;
 }
-.discussion-sidebar-item.discussion-sidebar-item.no-border{
+.discussion-sidebar-item.discussion-sidebar-item.no-border {
     margin: 0 !important;
     border: 0 !important;
     position: relative;
@@ -133,7 +135,7 @@ $color-dark-yellow: #daa520;
         position: absolute;
     }
 }
-.sidebar-floated-label{
+.sidebar-floated-label {
     color: #eee;
     font-size: 22px;
     left: 106%;
@@ -142,13 +144,13 @@ $color-dark-yellow: #daa520;
     width: 100%;
 }
 .panel {
-  border: 1px solid $color-neutral-light;
-  border-radius: 8px;
-  overflow: hidden;
-  &.hourly {
-    .label {
-      display: none;
-    }
+    border: 1px solid $color-neutral-light;
+    border-radius: 8px;
+    overflow: hidden;
+    &.hourly {
+        .label {
+            display: none;
+        }
 
         .panel-title {
             background-color: $color-alert;
@@ -240,9 +242,9 @@ $color-dark-yellow: #daa520;
 }
 
 .panel-item {
-  border-top: 1px solid $color-neutral-light;
-  display: block;
-  padding: 4px 8px;
+    border-top: 1px solid $color-neutral-light;
+    display: block;
+    padding: 4px 8px;
     .AvatarStack {
         display: inline-block !important;
         float: right !important;
@@ -269,54 +271,55 @@ $color-dark-yellow: #daa520;
 .issue {
     line-height: 1em;
 
-  &:hover {
-    text-decoration: none;
-  }
-  // define before overdue so overdue issues will still appears red, since
-  // issue erosion still happens for "held issues"
-  &.help-wanted,
-  &.challenge-sent,
-  &.hold,
-  &.nonowner {
-    color: darken($color-neutral-light, 20%) !important;
-    .issue-link {
-      color: darken($color-neutral-light, 20%) !important;
+    &:hover {
+        text-decoration: none;
     }
     // define before overdue so overdue issues will still appears red, since
     // issue erosion still happens for "held issues"
     &.help-wanted,
     &.challenge-sent,
-    &.hold {
+    &.hold,
+    &.nonowner {
         color: darken($color-neutral-light, 20%) !important;
         .issue-link {
             color: darken($color-neutral-light, 20%) !important;
         }
-        .label {
-            background-color: darken($color-neutral-light, 20%) !important;
+        // define before overdue so overdue issues will still appears red, since
+        // issue erosion still happens for "held issues"
+        &.help-wanted,
+        &.challenge-sent,
+        &.hold {
+            color: darken($color-neutral-light, 20%) !important;
+            .issue-link {
+                color: darken($color-neutral-light, 20%) !important;
+            }
+            .label {
+                background-color: darken($color-neutral-light, 20%) !important;
+            }
         }
-    }
-    &.planning {
-        color: $color-dark-yellow !important;
-    }
-    &.overdue {
-        color: $color-alert !important;
-        // Only show the alert icon if the item is overdue
-        .octicon-alert {
-            display: inline;
+        &.planning {
+            color: $color-dark-yellow !important;
         }
-    }
-    &.reviewing {
-        color: $color-neutral-light !important;
-        .issue-link {
+        &.overdue {
+            color: $color-alert !important;
+            // Only show the alert icon if the item is overdue
+            .octicon-alert {
+                display: inline;
+            }
+        }
+        &.reviewing {
             color: $color-neutral-light !important;
+            .issue-link {
+                color: $color-neutral-light !important;
+            }
+            .label {
+                background-color: $color-neutral-light !important;
+            }
         }
-        .label {
-            background-color: $color-neutral-light !important;
+        &.waiting-for-customer,
+        &.contributor-assigned {
+            color: $color-light-purple;
         }
-    }
-    &.waiting-for-customer,
-    &.contributor-assigned {
-        color: $color-light-purple;
     }
 }
 
@@ -426,25 +429,25 @@ $color-dark-yellow: #daa520;
 }
 
 .btn-group-vertical {
-  display: flex;
-  flex-direction: column;
+    display: flex;
+    flex-direction: column;
 
-  .btn {
-    border-radius: 0px;
-    border-bottom-width: 0px;
-    text-align: left;
+    .btn {
+        border-radius: 0px;
+        border-bottom-width: 0px;
+        text-align: left;
 
-    &:first-child {
-      border-top-left-radius: 4px;
-      border-top-right-radius: 4px;
-      text-align: center;
+        &:first-child {
+            border-top-left-radius: 4px;
+            border-top-right-radius: 4px;
+            text-align: center;
+        }
+        &:last-child {
+            border-bottom-left-radius: 4px;
+            border-bottom-right-radius: 4px;
+            border-bottom-width: 1px;
+        }
     }
-    &:last-child {
-      border-bottom-left-radius: 4px;
-      border-bottom-right-radius: 4px;
-      border-bottom-width: 1px;
-    }
-  }
 }
 
 .pull-left {
@@ -641,28 +644,30 @@ $color-dark-yellow: #daa520;
 }
 
 .js-issue-assignees .k2-button {
-  position: absolute;
-  right: -12px;
-  margin-top: -5px !important;
+    position: absolute;
+    right: -12px;
+    margin-top: -5px !important;
 }
 
 .alert {
-  color: $color-alert;
-  font-weight: bold;
-  margin: 8px 16px;
+    color: $color-alert;
+    font-weight: bold;
+    margin: 8px 16px;
 }
 
 .issue-filter {
-  border-radius: 8px;
-  background: none;
-  border: 1px solid rgb(221, 221, 221);
+    border-radius: 8px;
+    background: none;
+    border: 1px solid rgb(221, 221, 221);
 }
 
 @media (prefers-color-scheme: dark) {
-  .panel, .panel-item, .issue-filter {
-     border-color: rgb(48, 54, 61);
-  }
-  .issue-filter {
-     color: rgb(230, 237, 243)
-  }
+    .panel,
+    .panel-item,
+    .issue-filter {
+        border-color: rgb(48, 54, 61);
+    }
+    .issue-filter {
+        color: rgb(230, 237, 243);
+    }
 }
