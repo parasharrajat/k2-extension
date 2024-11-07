@@ -1,4 +1,5 @@
-@import "global";
+@use "sass:color";
+@use 'global';
 
 $gutter: 5px;
 
@@ -281,10 +282,17 @@ $color-dark-yellow: #daa520;
     &.hold,
     &.nonowner {
         color: darken($color-neutral-light, 20%) !important;
+        .issue-link {
+            color: color.adjust($color-neutral-light, $lightness: -20%) !important;
+          }
+        .label {
+            background-color: color.adjust($color-neutral-light, $lightness: -20%) !important;
+          }
     }
     .issue-link {
         color: darken($color-neutral-light, 20%) !important;
     }
+
     // define before overdue so overdue issues will still appears red, since
     // issue erosion still happens for "held issues"
     &.help-wanted,

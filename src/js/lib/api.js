@@ -282,7 +282,7 @@ function getCheckRuns(repo, headSHA) {
  * @param {String[]} [labels]
  * @returns {Promise}
  */
-function getIssues(assignee = 'none', labels) {
+function getIssues(assignee = 'none', labels = []) {
     let query = '';
 
     // Get the PRs assigned to me
