@@ -149,14 +149,67 @@ function formatIssueResults(rawIssueData) {
     return _.indexBy(cleanData, 'id');
 }
 
+function getHotPickIssues() {
+    let query = '';
+    query += ' state:open';
+    query += ' type:issue';
+    query += ' repo:Expensify/App';
+    query += ' repo:Expensify/Expensify';
+    query += ' NOT hold in:title';
+    query += ' label:\\"Hot Pick\\"';
+
+    const graphQLQuery = `
+        query($cursor:String) {
+            search(
+                query: "${query}"
+                type: ISSUE
+                first: 100
+                after:$cursor
+            ) {
+                pageInfo {
+                    endCursor
+                    hasNextPage
+                }
+                nodes {
+                    ... on Issue {
+                        title
+                        id
+                        url
+                        createdAt
+                        updatedAt
+                        assignees(first: 100) {
+                          nodes {
+                            avatarUrl
+                            login
+                          }
+                        }
+                        labels(first: 100) {
+                            nodes {
+                                name
+                            }
+                        }
+                        milestone {
+                            id
+                        }
+                    }
+                }
+            }
+        }
+    `;
+
+    return getFullResultsUsingPagination(graphQLQuery)
+        .then(formatIssueResults);
+}
+
 function getWAQIssues() {
     let query = '';
     query += ' state:open';
     query += ' type:issue';
     query += ' repo:Expensify/App';
-    query += ' label:Bug';
+    query += ' repo:Expensify/Expensify';
     query += ' NOT hold in:title';
     query += ' -label:Reviewing';
+    query += ` assignee:${getCurrentUser()}`;
 
     const graphQLQuery = `
         query($cursor:String) {
@@ -514,6 +567,7 @@ export {
     getEngineeringIssues,
     getIssuesAssigned,
     getDailyImprovements,
+    getHotPickIssues,
     getWAQIssues,
     addLabel,
     removeLabel,

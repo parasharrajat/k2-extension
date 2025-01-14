@@ -17,19 +17,36 @@ const propTypes = {
 
     /** The filters to apply to the GH issues */
     filters: filterPropTypes,
+
+    checkboxes: PropTypes.shape({
+        /** Should issues that are on HOLD be hidden? */
+        shouldHideOnHold: PropTypes.bool,
+
+        /** Should issues with "reviewing" label be hidden? */
+        shouldHideUnderReview: PropTypes.bool,
+
+        /** Should issues owned by someone else be hidden? */
+        shouldHideOwnedBySomeoneElse: PropTypes.bool,
+    }),
 };
 const defaultProps = {
     issues: null,
+    checkboxes: {
+        shouldHideOnHold: false,
+        shouldHideUnderReview: false,
+        shouldHideOwnedBySomeoneElse: false,
+    },
     filters: {},
 };
 
 class ListIssuesAssigned extends React.Component {
     constructor(props) {
         super(props);
-
-        this.state = {shouldHideHeldIssues: false};
-        this.state = {shouldHideUnderReviewIssues: false};
-        this.state = {shouldHideOwnedBySomeoneElseIssues: false};
+        this.state = {
+            shouldHideHeldIssues: props.checkboxes.shouldHideOnHold,
+            shouldHideUnderReviewIssues: props.checkboxes.shouldHideUnderReview,
+            shouldHideOwnedBySomeoneElseIssues: props.checkboxes.shouldHideOwnedBySomeoneElse,
+        };
         this.fetch = this.fetch.bind(this);
         this.filterIssues = this.filterIssues.bind(this);
         this.toggleHeldFilter = this.toggleHeldFilter.bind(this);
@@ -78,14 +95,17 @@ class ListIssuesAssigned extends React.Component {
 
     toggleHeldFilter() {
         this.setState(prevState => ({shouldHideHeldIssues: !prevState.shouldHideHeldIssues}));
+        Issues.saveCheckboxes({shouldHideOnHold: !this.state.shouldHideHeldIssues});
     }
 
     toggleUnderReviewFilter() {
         this.setState(prevState => ({shouldHideUnderReviewIssues: !prevState.shouldHideUnderReviewIssues}));
+        Issues.saveCheckboxes({shouldHideUnderReview: !this.state.shouldHideUnderReviewIssues});
     }
 
     toggleOwnedBySomeoneElseFilter() {
         this.setState(prevState => ({shouldHideOwnedBySomeoneElseIssues: !prevState.shouldHideOwnedBySomeoneElseIssues}));
+        Issues.saveCheckboxes({shouldHideOwnedBySomeoneElse: !this.state.shouldHideOwnedBySomeoneElseIssues});
     }
 
     render() {
@@ -113,19 +133,37 @@ class ListIssuesAssigned extends React.Component {
                         Hide:
                         <div className="checkbox">
                             <label>
-                                <input type="checkbox" name="shouldHideIfHeld" id="shouldHideIfHeld" onChange={this.toggleHeldFilter} />
+                                <input
+                                    type="checkbox"
+                                    name="shouldHideIfHeld"
+                                    id="shouldHideIfHeld"
+                                    onChange={this.toggleHeldFilter}
+                                    checked={this.state.shouldHideHeldIssues ? 'checked' : undefined}
+                                />
                                 On Hold
                             </label>
                         </div>
                         <div className="checkbox">
                             <label>
-                                <input type="checkbox" name="shouldHideIfUnderReview" id="shouldHideIfUnderReview" onChange={this.toggleUnderReviewFilter} />
+                                <input
+                                    type="checkbox"
+                                    name="shouldHideIfUnderReview"
+                                    id="shouldHideIfUnderReview"
+                                    onChange={this.toggleUnderReviewFilter}
+                                    checked={this.state.shouldHideUnderReviewIssues ? 'checked' : undefined}
+                                />
                                 Under Review
                             </label>
                         </div>
                         <div className="checkbox">
                             <label>
-                                <input type="checkbox" name="shouldHideIfUnderReview" id="shouldHideIfUnderReview" onChange={this.toggleOwnedBySomeoneElseFilter} />
+                                <input
+                                    type="checkbox"
+                                    name="shouldHideIfOwnedBySomeoneElse"
+                                    id="shouldHideIfOwnedBySomeoneElse"
+                                    onChange={this.toggleOwnedBySomeoneElseFilter}
+                                    checked={this.state.shouldHideOwnedBySomeoneElseIssues ? 'checked' : undefined}
+                                />
                                 Owned by Someone Else
                             </label>
                         </div>
@@ -204,5 +242,8 @@ export default withOnyx({
     },
     filters: {
         key: ONYXKEYS.ISSUES.FILTER,
+    },
+    checkboxes: {
+        key: ONYXKEYS.ISSUES.CHECKBOXES,
     },
 })(ListIssuesAssigned);
