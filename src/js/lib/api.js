@@ -380,6 +380,8 @@ function getIssues(assignee = 'none', labels = []) {
                     url
                     createdAt
                     updatedAt
+                    closed
+                    number
                     body
                     assignees(first: 100) {
                         nodes {

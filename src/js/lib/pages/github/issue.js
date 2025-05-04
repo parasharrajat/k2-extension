@@ -157,7 +157,7 @@ const refreshAssignees = () => {
 const refreshPicker = function () {
     // Add our wrappers to the DOM which all the React components will be rendered into
     if (!$('.k2picker-wrapper').length) {
-        $('.js-issue-labels').after(sidebarWrapperHTML);
+        $('[data-testid=issue-labels]').after(sidebarWrapperHTML);
     }
 
     new K2picker().draw();

@@ -34,6 +34,7 @@ class BudgetPlanner extends React.Component {
 
     componentDidMount() {
         this.calculatePayments();
+        this.createIssueMap();
     }
 
     componentDidUpdate(prevProps) {
@@ -41,6 +42,15 @@ class BudgetPlanner extends React.Component {
             return;
         }
         this.calculatePayments();
+        this.createIssueMap();
+    }
+
+    createIssueMap() {
+        const issuesMap = {};
+        _.forEach(this.props.issues, (issue) => {
+            issuesMap[issue.number] = issue;
+        });
+        this.issuesMap = issuesMap;
     }
 
     calculatePayments() {
@@ -87,7 +97,8 @@ class BudgetPlanner extends React.Component {
 
         const pendingRequests = _.chain(this.props.cPlusStatus)
             .keys()
-            .filter(key => this.checkStatus(this.props.cPlusStatus[key], 'Pending Payment')).value() || [];
+            .filter(key => this.checkStatus(this.props.cPlusStatus[key], 'Pending Payment'))
+            .value() || [];
 
         const requestedRequests = _.chain(this.props.cPlusStatus)
             .keys()
@@ -149,8 +160,9 @@ class BudgetPlanner extends React.Component {
                                             </h5>
                                             {_.map(pendingRequests, (key) => {
                                                 const id = getIDfromCollectionkey(ONYXKEYS.COLLECTION.C_PLUS_PAYMENT_STATUS, key);
+                                                const className = this.issuesMap?.[id]?.closed ? 'color-bg-closed-emphasis' : 'color-bg-severe-emphasis';
                                                 return (
-                                                    <a className="IssueLabel color-bg-severe-emphasis color-fg-on-emphasis" href={`https://github.com/Expensify/App/issues/${id}`}>
+                                                    <a className={`IssueLabel color-fg-on-emphasis ${className}`} href={`https://github.com/Expensify/App/issues/${id}`}>
                                                         #
                                                         {id}
                                                         <span className="IssueLabel IssueAmountLabel color-bg-subtle color-fg-severe">{this.props.cPlusStatus[key]?.amount}</span>
@@ -166,8 +178,9 @@ class BudgetPlanner extends React.Component {
                                             </h5>
                                             {_.map(requestedRequests, (key) => {
                                                 const id = getIDfromCollectionkey(ONYXKEYS.COLLECTION.C_PLUS_PAYMENT_STATUS, key);
+                                                const className = this.issuesMap?.[id]?.closed ? 'color-bg-closed-emphasis' : 'color-bg-open-emphasis';
                                                 return (
-                                                    <a className="IssueLabel color-bg-open-emphasis color-fg-on-emphasis" href={`https://github.com/Expensify/App/issues/${id}`}>
+                                                    <a className={`IssueLabel color-fg-on-emphasis ${className}`} href={`https://github.com/Expensify/App/issues/${id}`}>
                                                         #
                                                         {id}
                                                         <span className="IssueLabel IssueAmountLabel color-bg-subtle color-fg-emphasis">{this.props.cPlusStatus[key]?.amount}</span>
