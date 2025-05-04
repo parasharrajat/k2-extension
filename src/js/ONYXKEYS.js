@@ -18,6 +18,7 @@ export default {
         CHECKBOXES: 'issueCheckboxes',
         HOTPICKS: 'issueHotPicks',
         WAQ: 'issueWhatsAppQuality',
+        COLLECTION_PRIORITIES: 'issuePriorities_',
     },
 
     MILESTONES: 'milestones',

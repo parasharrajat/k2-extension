@@ -1,7 +1,22 @@
-import React, {useCallback} from 'react';
+import {
+    DndContext,
+    closestCenter,
+    PointerSensor,
+    useSensor,
+    useSensors,
+    DragOverlay,
+} from '@dnd-kit/core';
+import {
+    arrayMove,
+    SortableContext,
+    verticalListSortingStrategy,
+} from '@dnd-kit/sortable';
+import React, {
+    useMemo, useState, useEffect, useCallback,
+} from 'react';
 import _ from 'underscore';
 import PropTypes from 'prop-types';
-import {withOnyx} from 'react-native-onyx';
+import {withOnyx, useOnyx} from 'react-native-onyx';
 import Title from '../panel-title/Title';
 import IssuePropTypes from '../list-item/IssuePropTypes';
 import ListItemIssue from '../list-item/ListItemIssue';
@@ -9,6 +24,8 @@ import ONYXKEYS from '../../ONYXKEYS';
 import filterPropTypes from '../../lib/filterPropTypes';
 // eslint-disable-next-line rulesdir/prefer-import-module-contents
 import {togglePanel} from '../../lib/actions/dashboard';
+import * as Issues from '../../lib/actions/Issues';
+import SortableIssue from '../list-item/SortableIssue';
 
 const propTypes = {
     /** A CSS class to add to this panel to give it some color */
@@ -57,60 +74,162 @@ const defaultProps = {
     hideIfOwnedBySomeoneElse: false,
 };
 
+function getOrderedFilteredIssues({
+    issues,
+    filters = {},
+    priorities = {},
+    localOrder = [],
+    hideIfHeld = false,
+    hideIfUnderReview = false,
+    hideIfOwnedBySomeoneElse = false,
+    applyFilters = false,
+}) {
+    let preparedIssues = issues;
+    if (!preparedIssues) {
+        return [];
+    }
+
+    // Hide by hold, review, owner
+    if (hideIfHeld || hideIfUnderReview || hideIfOwnedBySomeoneElse) {
+        preparedIssues = _.filter(preparedIssues, (item) => {
+            const isHeld = item.title.toLowerCase().indexOf('[hold') > -1 ? ' hold' : '';
+            const isUnderReview = _.find(item.labels, label => label.name.toLowerCase() === 'reviewing');
+            const isOwnedBySomeoneElse = item.issueHasOwner && !item.currentUserIsOwner;
+            if (isHeld && hideIfHeld) {
+                return false;
+            }
+            if (isUnderReview && hideIfUnderReview) {
+                return false;
+            }
+            if (isOwnedBySomeoneElse && hideIfOwnedBySomeoneElse) {
+                return false;
+            }
+            return true;
+        });
+    }
+
+    // Apply filters
+    if (applyFilters && filters && !_.isEmpty(filters)) {
+        preparedIssues = _.filter(preparedIssues, (item) => {
+            const isImprovement = _.findWhere(item.labels, {name: 'Improvement'});
+            const isTask = _.findWhere(item.labels, {name: 'Task'});
+            const isFeature = _.findWhere(item.labels, {name: 'NewFeature'});
+            const isOnMilestone = item.milestone && item.milestone.id === filters.milestone;
+
+            // If we are filtering on milestone, remove everything not on that milestone
+            if (filters.milestone && !isOnMilestone) {
+                return false;
+            }
+            return (filters.improvement && isImprovement)
+                || (filters.task && isTask)
+                || (filters.feature && isFeature);
+        });
+    }
+
+    // Sort by priority, then owner
+    preparedIssues = _.sortBy(preparedIssues, (item) => {
+        const priority = priorities[item.url ?? ''] && (priorities[item.url].priority !== undefined)
+            ? priorities[item.url].priority
+            : Number.MAX_SAFE_INTEGER;
+        return [priority, item.currentUserIsOwner ? 0 : 1];
+    });
+
+    // Use localOrder if available, while waiting for Onyx to update
+    if (localOrder.length && localOrder.length === preparedIssues.length) {
+        const dataById = _.indexBy(preparedIssues, 'id');
+        return _.filter(_.map(localOrder, id => dataById[id]), Boolean);
+    }
+    return preparedIssues;
+}
+
 function PanelIssues(props) {
-    let filteredData = props.data;
+    const [priorities = {}] = useOnyx(`${ONYXKEYS.ISSUES.COLLECTION_PRIORITIES}${props.title}`);
+    const [activeId, setActiveId] = useState(null);
+
+    // Add local state for ordered issues so that it can be updated synchronously when the user drags an issue and drops it,
+    // preventing the item from jumping back to its original position briefly
+    const [localOrder, setLocalOrder] = useState([]);
+
+    // When priorities or filteredData change (i.e., Onyx updates), clear localOrder only if it's set
+    useEffect(() => {
+        if (!localOrder.length) {
+            return;
+        }
+        setLocalOrder([]);
+    }, [priorities, props.data, props.filters, props.hideIfHeld, props.hideIfUnderReview, props.hideIfOwnedBySomeoneElse, props.applyFilters, localOrder]);
 
     const collapseContent = useCallback(() => {
         togglePanel(props.panelID, !props.panel.isHidden);
     }, [props.panel]);
 
-    if (props.hideIfHeld || props.hideIfUnderReview || props.hideIfOwnedBySomeoneElse) {
-        filteredData = _.filter(props.data, (item) => {
-            const isHeld = item.title.toLowerCase().indexOf('[hold') > -1 ? ' hold' : '';
-            const isUnderReview = _.find(item.labels, label => label.name.toLowerCase() === 'reviewing');
-            const isOwnedBySomeoneElse = item.issueHasOwner && !item.currentUserIsOwner;
+    const filteredData = useMemo(() => getOrderedFilteredIssues({
+        issues: props.data,
+        filters: props.filters,
+        priorities,
+        localOrder,
+        hideIfHeld: props.hideIfHeld,
+        hideIfUnderReview: props.hideIfUnderReview,
+        hideIfOwnedBySomeoneElse: props.hideIfOwnedBySomeoneElse,
+        applyFilters: props.applyFilters,
+    }), [
+        props.data,
+        props.hideIfHeld,
+        props.hideIfUnderReview,
+        props.hideIfOwnedBySomeoneElse,
+        props.applyFilters,
+        props.filters,
+        priorities,
+        localOrder,
+    ]);
 
-            if (isHeld && props.hideIfHeld) {
-                return false;
-            }
+    const sensors = useSensors(
+        useSensor(PointerSensor, {
+            activationConstraint: {
+                distance: 5,
+            },
+        }),
+    );
 
-            if (isUnderReview && props.hideIfUnderReview) {
-                return false;
-            }
+    const issueIds = _.map(filteredData, issue => issue.id.toString());
+    const activeIssue = activeId ? _.find(filteredData, issue => issue.id.toString() === activeId) : null;
 
-            if (isOwnedBySomeoneElse && props.hideIfOwnedBySomeoneElse) {
-                return false;
-            }
+    const updatePriorities = useCallback((event) => {
+        // In dnd-kit, `event.active` represents the item being dragged, and `event.over` represents the item currently being hovered over (the potential drop target).
+        const active = event.active;
+        const over = event.over;
+        setActiveId(null);
 
-            return true;
-        });
-    }
+        // Early return: If there is no item being hovered over (e.g., dropped outside a valid target), or if the dragged item is dropped back in its original position.
+        if (!over || active.id === over.id) {
+            return;
+        }
 
-    // We need to be sure to filter the data if the user has set any filters
-    if (props.applyFilters && props.filters && !_.isEmpty(props.filters)) {
-        filteredData = _.filter(props.data, (item) => {
-            const isImprovement = _.findWhere(item.labels, {name: 'Improvement'});
-            const isTask = _.findWhere(item.labels, {name: 'Task'});
-            const isFeature = _.findWhere(item.labels, {name: 'NewFeature'});
-            const isOnMilestone = item.milestone && item.milestone.id === props.filters.milestone;
+        // Early return: If either the dragged or target item is not found in the list.
+        const oldIndex = issueIds.indexOf(active.id);
+        const newIndex = issueIds.indexOf(over.id);
+        if (oldIndex === -1 || newIndex === -1) {
+            return;
+        }
 
-            // If we are filtering on milestone, remove everything not on that milestone
-            if (props.filters.milestone && !isOnMilestone) {
-                return false;
-            }
+        // Update local order immediately for UI feedback
+        const newOrder = arrayMove(_.pluck(filteredData, 'id'), oldIndex, newIndex);
+        setLocalOrder(newOrder);
 
-            return (props.filters.improvement && isImprovement)
-                || (props.filters.task && isTask)
-                || (props.filters.feature && isFeature);
-        });
-    }
+        // Also update priorities in Onyx
+        const reorderedData = arrayMove(filteredData, oldIndex, newIndex);
+        const newPriorities = {};
+        for (let i = 0; i < reorderedData.length; i++) {
+            const issue = reorderedData[i];
+            newPriorities[issue.url] = {
+                priority: i,
+            };
+        }
+        Issues.setPriorities(newPriorities, props.title);
+    }, [setActiveId, issueIds, filteredData, props.title]);
 
-    if (!_.size(props.data) && props.hideOnEmpty) {
+    if (!_.size(filteredData) && props.hideOnEmpty) {
         return null;
     }
-
-    // Put the issues owned by the current user at the top of the list
-    const sortedData = _.sortBy(filteredData, 'currentUserIsOwner');
 
     return (
         <div className={`panel ${props.extraClass}`}>
@@ -120,17 +239,39 @@ function PanelIssues(props) {
                 onClick={collapseContent}
             />
             <div className={`collapse ${props.panel.isHidden ? 'hidden' : ''}`}>
-                {!_.size(props.data) ? (
+                {!_.size(filteredData) ? (
                     <div className="blankslate capped clean-background">
                         No items
                     </div>
                 ) : (
-                    <div>
-                        {_.map(sortedData, issue => <ListItemIssue key={`issue_raw_${issue.id}`} issue={issue} />)}
-                    </div>
+                    <DndContext
+                        sensors={sensors}
+                        collisionDetection={closestCenter}
+                        onDragStart={e => setActiveId(e.active.id)}
+                        onDragEnd={updatePriorities}
+                    >
+                        <SortableContext
+                            items={issueIds}
+                            strategy={verticalListSortingStrategy}
+                        >
+                            {_.map(filteredData, issue => <SortableIssue key={issue.id} issue={issue} />)}
+                        </SortableContext>
+                        <DragOverlay>
+                            {activeIssue ? (
+                                <div style={{
+                                    lineHeight: 1.2,
+                                    background: '#fff',
+                                    opacity: 1,
+                                    boxShadow: '0 2px 8px rgba(0,0,0,0.08)',
+                                }}
+                                >
+                                    <ListItemIssue issue={activeIssue} />
+                                </div>
+                            ) : null}
+                        </DragOverlay>
+                    </DndContext>
                 )}
             </div>
-
         </div>
     );
 }
