@@ -36,7 +36,6 @@ class RequestModal extends React.Component {
             shouldShowConfirmationMessage: false,
             participationComment: '',
             selectedButton: {},
-            amount: 250,
             ...this.labels,
             requestModal: {
                 url: '',
@@ -88,7 +87,7 @@ class RequestModal extends React.Component {
     }
 
     submit() {
-        RequestPayment.saveCPlusPaymentSatus(this.props.issueID, 'Requested', this.state.amount);
+        RequestPayment.saveCPlusPaymentSatus(this.props.issueID, 'Requested', this.state.requestModal.amount);
         let msg = 'Payment requested';
         if (this.state.requestModal.url) {
             msg = `Payment requested as per ${this.state.requestModal.url}`;
