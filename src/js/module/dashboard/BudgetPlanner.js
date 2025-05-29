@@ -6,6 +6,7 @@ import {withOnyx} from 'react-native-onyx';
 import Panel from '../../component/Panel';
 import ONYXKEYS from '../../ONYXKEYS';
 import IssuePropTypes from '../../component/list-item/IssuePropTypes';
+import RequestPayment from '../../lib/actions/RequestPayment';
 
 const propTypes = {
     issues: PropTypes.objectOf(IssuePropTypes),
@@ -44,6 +45,11 @@ class BudgetPlanner extends React.Component {
         this.calculatePayments();
         this.createIssueMap();
     }
+
+    removeRequested = (e, issueID) => {
+        e.preventDefault();
+        RequestPayment.removeCPlusPaymentSatus(issueID);
+    };
 
     createIssueMap() {
         const issuesMap = {};
@@ -183,7 +189,14 @@ class BudgetPlanner extends React.Component {
                                                     <a className={`IssueLabel color-fg-on-emphasis ${className}`} href={`https://github.com/Expensify/App/issues/${id}`}>
                                                         #
                                                         {id}
-                                                        <span className="IssueLabel IssueAmountLabel color-bg-subtle color-fg-emphasis">{this.props.cPlusStatus[key]?.amount}</span>
+                                                        <span className="IssueAmountLabel IssueLabel color-bg-subtle fgColor-open">{this.props.cPlusStatus[key]?.amount}</span>
+                                                        <button
+                                                            type="button"
+                                                            className="IssueAmountLabel IssueLabel bgColor-transparent fgColor-onEmphasis fgColor-open text-small"
+                                                            onClick={e => this.removeRequested(e, id)}
+                                                        >
+                                                            X
+                                                        </button>
                                                     </a>
                                                 );
                                             })}

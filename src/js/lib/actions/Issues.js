@@ -108,6 +108,7 @@ function getAllAssigned() {
         ])
             .then(([issues, approvedIssues]) => {
                 const currentUser = API.getCurrentUser();
+                // eslint-disable-next-line rulesdir/no-acc-spread-in-reduce
                 const issuesMarkedWithOwner = _.reduce(issues, (finalObject, issue) => {
                     const regexResult = issue.body.match(/Current Issue Owner:\s@(?<owner>\S+)/i);
                     const currentOwner = regexResult && regexResult.groups && regexResult.groups.owner;
@@ -117,7 +118,7 @@ function getAllAssigned() {
                             ...issue,
                             // eslint-disable-next-line es/no-optional-chaining
                             isAboutToBeOverdue: isMoreThan24HoursOld(_.find(issue.comments.nodes, c => c.author.login === API.getCurrentUser())?.updatedAt),
-                            issueHasOwner: Boolean(currentOwner),
+                            issueHasOwner: !!currentOwner,
                             currentUserIsOwner: currentOwner && currentOwner === currentUser,
                             isCPlusApproved: _.has(approvedIssues, issue.id),
                         },

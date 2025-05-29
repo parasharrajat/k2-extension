@@ -1,5 +1,5 @@
 @use "sass:color";
-@use 'global';
+@use "global";
 
 $gutter: 5px;
 
@@ -283,11 +283,17 @@ $color-dark-yellow: #daa520;
     &.nonowner {
         color: darken($color-neutral-light, 20%) !important;
         .issue-link {
-            color: color.adjust($color-neutral-light, $lightness: -20%) !important;
-          }
+            color: color.adjust(
+                $color-neutral-light,
+                $lightness: -20%
+            ) !important;
+        }
         .label {
-            background-color: color.adjust($color-neutral-light, $lightness: -20%) !important;
-          }
+            background-color: color.adjust(
+                $color-neutral-light,
+                $lightness: -20%
+            ) !important;
+        }
     }
     .issue-link {
         color: darken($color-neutral-light, 20%) !important;
@@ -330,7 +336,7 @@ $color-dark-yellow: #daa520;
         color: $color-light-purple;
     }
 
-    .aboutobedue{
+    .aboutobedue {
         color: $color-alert !important;
     }
 }
@@ -609,10 +615,9 @@ $color-dark-yellow: #daa520;
 .k2picker-wrapper,
 .k2pickertype-wrapper,
 .k2togglereviewing-wrapper,
-.k2comments-wrapper
-.k2previousissues-wrapper {
-  .btn-group {
-    display: flex;
+.k2comments-wrapper .k2previousissues-wrapper {
+    .btn-group {
+        display: flex;
 
         .btn {
             flex-basis: 0;
@@ -689,22 +694,138 @@ $color-dark-yellow: #daa520;
     aspect-ratio: 1;
     border-radius: 50%;
     border: 2px solid #514b82;
-    animation:
-        l20-1 0.8s infinite linear alternate,
-        l20-2 1.6s infinite linear;
+    animation: l20-1 0.8s infinite linear alternate, l20-2 1.6s infinite linear;
 }
-@keyframes l20-1{
-    0%    {clip-path: polygon(50% 50%,0       0,  50%   0%,  50%    0%, 50%    0%, 50%    0%, 50%    0% )}
-    12.5% {clip-path: polygon(50% 50%,0       0,  50%   0%,  100%   0%, 100%   0%, 100%   0%, 100%   0% )}
-    25%   {clip-path: polygon(50% 50%,0       0,  50%   0%,  100%   0%, 100% 100%, 100% 100%, 100% 100% )}
-    50%   {clip-path: polygon(50% 50%,0       0,  50%   0%,  100%   0%, 100% 100%, 50%  100%, 0%   100% )}
-    62.5% {clip-path: polygon(50% 50%,100%    0, 100%   0%,  100%   0%, 100% 100%, 50%  100%, 0%   100% )}
-    75%   {clip-path: polygon(50% 50%,100% 100%, 100% 100%,  100% 100%, 100% 100%, 50%  100%, 0%   100% )}
-    100%  {clip-path: polygon(50% 50%,50%  100%,  50% 100%,   50% 100%,  50% 100%, 50%  100%, 0%   100% )}
+@keyframes l20-1 {
+    0% {
+        clip-path: polygon(
+            50% 50%,
+            0 0,
+            50% 0%,
+            50% 0%,
+            50% 0%,
+            50% 0%,
+            50% 0%
+        );
+    }
+    12.5% {
+        clip-path: polygon(
+            50% 50%,
+            0 0,
+            50% 0%,
+            100% 0%,
+            100% 0%,
+            100% 0%,
+            100% 0%
+        );
+    }
+    25% {
+        clip-path: polygon(
+            50% 50%,
+            0 0,
+            50% 0%,
+            100% 0%,
+            100% 100%,
+            100% 100%,
+            100% 100%
+        );
+    }
+    50% {
+        clip-path: polygon(
+            50% 50%,
+            0 0,
+            50% 0%,
+            100% 0%,
+            100% 100%,
+            50% 100%,
+            0% 100%
+        );
+    }
+    62.5% {
+        clip-path: polygon(
+            50% 50%,
+            100% 0,
+            100% 0%,
+            100% 0%,
+            100% 100%,
+            50% 100%,
+            0% 100%
+        );
+    }
+    75% {
+        clip-path: polygon(
+            50% 50%,
+            100% 100%,
+            100% 100%,
+            100% 100%,
+            100% 100%,
+            50% 100%,
+            0% 100%
+        );
+    }
+    100% {
+        clip-path: polygon(
+            50% 50%,
+            50% 100%,
+            50% 100%,
+            50% 100%,
+            50% 100%,
+            50% 100%,
+            0% 100%
+        );
+    }
 }
-@keyframes l20-2{
-    0%    {transform:scaleY(1)  rotate(0deg)}
-    49.99%{transform:scaleY(1)  rotate(135deg)}
-    50%   {transform:scaleY(-1) rotate(0deg)}
-    100%  {transform:scaleY(-1) rotate(-135deg)}
+@keyframes l20-2 {
+    0% {
+        transform: scaleY(1) rotate(0deg);
+    }
+    49.99% {
+        transform: scaleY(1) rotate(135deg);
+    }
+    50% {
+        transform: scaleY(-1) rotate(0deg);
+    }
+    100% {
+        transform: scaleY(-1) rotate(-135deg);
+    }
+}
+
+#confirm-request {
+    /* Dialog Base Styles */
+    &.site-dialog {
+        border: 1px solid #ccc; /* Simple, light border */
+        border-radius: 4px; /* Slightly rounded corners */
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); /* Subtle shadow */
+        background-color: #fff; /* Clean white background */
+        max-width: 600px; /* Constrain width */
+        padding: 0; /* Remove default dialog padding to control internal spacing */
+        width: 100%;
+    }
+
+    /* Dialog Header */
+    .dialog-header {
+        padding: 15px 20px; /* Good breathing room */
+        border-bottom: 1px solid #eee; /* Light separator */
+        background-color: #f9f9f9; /* Very light background for header */
+        border-top-left-radius: 4px; /* Match dialog corners */
+        border-top-right-radius: 4px; /* Match dialog corners */
+    }
+
+    .dialog-header h1 {
+        font-size: 1.2em; /* Slightly larger than body text */
+        margin: 0; /* Remove default margin */
+        color: #333; /* Darker text for heading */
+    }
+
+    /* Dialog Content */
+    .dialog-content {
+        padding: 20px; /* Consistent padding inside content area */
+    }
+
+    .dialog-content p {
+        margin-top: 0; /* Remove top margin for consistency */
+        margin-bottom: 15px; /* Space below paragraph */
+        font-size: 0.95em; /* Slightly smaller text for description */
+        color: #666; /* Lighter grey for description */
+    }
 }

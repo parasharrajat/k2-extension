@@ -13,29 +13,6 @@ import RequestPayment from '../../lib/actions/RequestPayment';
 
 const defaultBtnClass = 'btn btn-sm tooltipped tooltipped-n typepicker';
 
-// const participationButtons = [
-//     {
-//         title: '📃 ✅ Reviewed Doc',
-//         ariaLabel: 'reviewed doc emojis',
-//         comment: 'I have read and reviewed this Design Doc!',
-//     },
-//     {
-//         title: '✋ Attended Interview',
-//         ariaLabel: 'attended interview emojis',
-//         comment: 'I attended this interview!',
-//     },
-//     {
-//         title: '🖊️ Reviewed Project Manager Application',
-//         ariaLabel: 'reviewed project manager emojis',
-//         comment: 'I have read and reviewed this Project Manager Application!',
-//     },
-//     {
-//         title: '📱 Reviewed Product Manager Application',
-//         ariaLabel: 'reviewed product manager emojis',
-//         comment: 'I have read and reviewed this Product Manager Application!',
-//     },
-// ];
-
 const propTypes = {
     issueID: PropTypes.string.isRequired,
     // eslint-disable-next-line react/forbid-prop-types
@@ -132,13 +109,15 @@ class Request extends React.Component {
      * @param {String} label
      */
     clickNSave(label) {
-        this.setActiveLabel(label,
+        this.setActiveLabel(
+            label,
             () => {
                 RequestPayment.saveCPlusPaymentSatus(this.props.issueID, label, this.state.amount);
             },
             () => {
                 RequestPayment.removeCPlusPaymentSatus(this.props.issueID);
-            });
+            },
+        );
     }
 
     render() {
@@ -222,7 +201,6 @@ class Request extends React.Component {
                     {/* eslint-disable-next-line jsx-a11y/label-has-associated-control */}
                     <label className="sidebar-floated-label">Track C+ Payment</label>
                     <input
-                        ref={el => this.input = el}
                         type="text"
                         id="amount"
                         name="amount"
