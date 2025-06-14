@@ -488,6 +488,82 @@ function getIssuesAssigned() {
 }
 
 /**
+ * Get all closed issues assigned to the current user
+ *
+ * @returns {Promise}
+ */
+function getClosedIssuesAssigned() {
+    let query = '';
+
+    // Get the PRs assigned to me
+    query += ' state:closed';
+    query += ' is:issue';
+
+    query += ' repo:Expensify/Expensify';
+    query += ' repo:Expensify/App';
+    query += ' repo:Expensify/VendorTasks';
+    query += ' repo:Expensify/Insiders';
+    query += ' repo:Expensify/Expensify-Guides';
+    query += ' repo:Expensify/react-native-onyx';
+    query += ` assignee:${getCurrentUser()}`;
+
+    const graphQLQuery = `
+        query($cursor:String) {
+            search(
+                query: "${query}"
+                type: ISSUE
+                first: 100
+                after:$cursor
+            ) {
+                pageInfo {
+                    endCursor
+                    hasNextPage
+                }
+                nodes {
+                    ... on Issue {
+                    title
+                    id
+                    url
+                    createdAt
+                    updatedAt
+                    closed
+                    number
+                    body
+                    assignees(first: 100) {
+                        nodes {
+                        avatarUrl
+                        login
+                        }
+                    }
+                    labels(first: 100) {
+                        nodes {
+                        name
+                        }
+                    }
+                    milestone {
+                        id
+                    }
+                    # Get comments with latest one first
+                    comments(first: 50, orderBy: { field: UPDATED_AT, direction: DESC }) {
+                      nodes {
+                        updatedAt
+                        body
+                        author {
+                            login
+                        }
+                      }
+                    }
+                }
+                }
+            }
+            }
+    `;
+
+    return getOctokit().graphql(graphQLQuery)
+        .then(queryResults => queryResults.search.nodes).then(formatIssueResults);
+}
+
+/**
  * Get all unassigned engineering issues
  *
  * @returns {Promise}
@@ -642,4 +718,5 @@ export {
     getCurrentIssueDescription,
     setCurrentIssueBody,
     getPreviousInstancesOfIssue,
+    getClosedIssuesAssigned,
 };

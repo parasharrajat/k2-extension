@@ -104,9 +104,10 @@ function getAllAssigned() {
     ActionThrottle('getAllAssigned', () => (
         Promise.all([
             API.getIssuesAssigned(),
+            API.getClosedIssuesAssigned(),
             API.getCPlusApprovedIssues(API.getCurrentUser()),
         ])
-            .then(([issues, approvedIssues]) => {
+            .then(([issues, closedIssues, approvedIssues]) => {
                 const currentUser = API.getCurrentUser();
                 // eslint-disable-next-line rulesdir/no-acc-spread-in-reduce
                 const issuesMarkedWithOwner = _.reduce(issues, (finalObject, issue) => {
@@ -124,6 +125,10 @@ function getAllAssigned() {
                         },
                     };
                 }, {});
+
+                _.each(closedIssues, (issue) => {
+                    issuesMarkedWithOwner[issue.id] = issue;
+                });
 
                 console.debug('issues', issuesMarkedWithOwner);
 
