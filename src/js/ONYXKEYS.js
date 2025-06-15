@@ -19,6 +19,7 @@ export default {
         HOTPICKS: 'issueHotPicks',
         WAQ: 'issueWhatsAppQuality',
         COLLECTION_PRIORITIES: 'issuePriorities_',
+        CLOSED_100: 'closed100_',
     },
 
     MILESTONES: 'milestones',

@@ -126,8 +126,9 @@ function getAllAssigned() {
                     };
                 }, {});
 
+                const issuesClosed = {};
                 _.each(closedIssues, (issue) => {
-                    issuesMarkedWithOwner[issue.id] = issue;
+                    issuesClosed[issue.id] = issue;
                 });
 
                 console.debug('issues', issuesMarkedWithOwner);
@@ -135,6 +136,7 @@ function getAllAssigned() {
                 // Always use set() here because there is no way to remove issues from Onyx
                 // that get closed and are no longer assigned
                 ReactNativeOnyx.set(ONYXKEYS.ISSUES.ASSIGNED, issuesMarkedWithOwner);
+                ReactNativeOnyx.set(ONYXKEYS.ISSUES.CLOSED_100, issuesClosed);
             })
     ));
 }

@@ -10,12 +10,16 @@ import RequestPayment from '../../lib/actions/RequestPayment';
 
 const propTypes = {
     issues: PropTypes.objectOf(IssuePropTypes),
+
+    /** closed issues */
+    issuesClosed: PropTypes.objectOf(IssuePropTypes),
     // eslint-disable-next-line react/forbid-prop-types
     cPlusStatus: PropTypes.any,
 };
 const defaultProps = {
     issues: {},
     cPlusStatus: {},
+    issuesClosed: {},
 };
 
 function getIDfromCollectionkey(collection, key) {
@@ -54,6 +58,9 @@ class BudgetPlanner extends React.Component {
     createIssueMap() {
         const issuesMap = {};
         _.forEach(this.props.issues, (issue) => {
+            issuesMap[issue.number] = issue;
+        });
+        _.forEach(this.props.issuesClosed, (issue) => {
             issuesMap[issue.number] = issue;
         });
         this.issuesMap = issuesMap;
@@ -219,6 +226,9 @@ BudgetPlanner.defaultProps = defaultProps;
 export default withOnyx({
     issues: {
         key: ONYXKEYS.ISSUES.ASSIGNED,
+    },
+    issuesClosed: {
+        key: ONYXKEYS.ISSUES.CLOSED_100,
     },
     cPlusStatus: {
         key: ONYXKEYS.COLLECTION.C_PLUS_PAYMENT_STATUS,
