@@ -12,7 +12,7 @@ import {
     verticalListSortingStrategy,
 } from '@dnd-kit/sortable';
 import React, {
-    useMemo, useState, useEffect, useCallback,
+    useMemo, useState, useEffect, useCallback, useRef,
 } from 'react';
 import _ from 'underscore';
 import PropTypes from 'prop-types';
@@ -58,6 +58,9 @@ const propTypes = {
 
     /** If the issue is owned by someone else, hide it */
     hideIfOwnedBySomeoneElse: PropTypes.bool,
+
+    /** If the issue is not overdue, hide it */
+    hideIfNotOverdue: PropTypes.bool,
 };
 const defaultProps = {
     filters: {
@@ -72,6 +75,7 @@ const defaultProps = {
     hideIfHeld: false,
     hideIfUnderReview: false,
     hideIfOwnedBySomeoneElse: false,
+    hideIfNotOverdue: false,
 };
 
 function getOrderedFilteredIssues({
@@ -82,6 +86,7 @@ function getOrderedFilteredIssues({
     hideIfHeld = false,
     hideIfUnderReview = false,
     hideIfOwnedBySomeoneElse = false,
+    hideIfNotOverdue = false,
     applyFilters = false,
 }) {
     let preparedIssues = issues;
@@ -89,12 +94,13 @@ function getOrderedFilteredIssues({
         return [];
     }
 
-    // Hide by hold, review, owner
-    if (hideIfHeld || hideIfUnderReview || hideIfOwnedBySomeoneElse) {
+    // Hide by hold, review, owner, overdue
+    if (hideIfHeld || hideIfUnderReview || hideIfOwnedBySomeoneElse || hideIfNotOverdue) {
         preparedIssues = _.filter(preparedIssues, (item) => {
             const isHeld = item.title.toLowerCase().indexOf('[hold') > -1 ? ' hold' : '';
             const isUnderReview = _.find(item.labels, label => label.name.toLowerCase() === 'reviewing');
             const isOwnedBySomeoneElse = item.issueHasOwner && !item.currentUserIsOwner;
+            const isOverdue = _.find(item.labels, label => label.name.toLowerCase() === 'overdue');
             if (isHeld && hideIfHeld) {
                 return false;
             }
@@ -102,6 +108,9 @@ function getOrderedFilteredIssues({
                 return false;
             }
             if (isOwnedBySomeoneElse && hideIfOwnedBySomeoneElse) {
+                return false;
+            }
+            if (!isOverdue && hideIfNotOverdue) {
                 return false;
             }
             return true;
@@ -126,25 +135,48 @@ function getOrderedFilteredIssues({
         });
     }
 
-    // Sort by priority, then owner
-    preparedIssues = _.sortBy(preparedIssues, (item) => {
-        const priority = priorities[item.url ?? ''] && (priorities[item.url].priority !== undefined)
-            ? priorities[item.url].priority
-            : Number.MAX_SAFE_INTEGER;
-        return [priority, item.currentUserIsOwner ? 0 : 1];
-    });
-
     // Use localOrder if available, while waiting for Onyx to update
-    if (localOrder.length && localOrder.length === preparedIssues.length) {
+    if (localOrder.length && localOrder.length === _.size(preparedIssues)) {
         const dataById = _.indexBy(preparedIssues, 'id');
         return _.filter(_.map(localOrder, id => dataById[id]), Boolean);
     }
-    return preparedIssues;
+
+    // Iteratee for sorting by owner (secondary sort, for un-prioritized issues)
+    const ownerSortIteratee = (item) => {
+        const priorityValue = priorities[item.url ?? ''] && (priorities[item.url].priority !== undefined)
+            ? priorities[item.url].priority
+            : Number.MAX_SAFE_INTEGER;
+        if (priorityValue === Number.MAX_SAFE_INTEGER) {
+            // Sort un-prioritized issues by owner
+            return item.currentUserIsOwner ? 0 : 1;
+        }
+
+        // Prioritized issues get the same value to maintain stability for the next sort
+        return 0;
+    };
+
+    // Iteratee for sorting by priority (primary sort)
+    const priorityIteratee = (item) => {
+        // If an issue doesn't have a priority, return -1 so that is appears at the top of the list, which will prompt the user to set a priority
+        const priorityValue = priorities[item.url ?? ''] && (priorities[item.url].priority !== undefined)
+            ? priorities[item.url].priority
+            : -1;
+
+        return priorityValue;
+    };
+
+    // Sort by priority, then owner. Sorting has to be chained, since _.sortBy doesn't support multi-criteria sorting.
+    // If an array is returned, it will be sorted lexicographically and won't sort properly according to priority when there are more than 10 issues.
+    return _.chain(preparedIssues)
+        .sortBy(ownerSortIteratee)
+        .sortBy(priorityIteratee)
+        .value();
 }
 
 function PanelIssues(props) {
     const [priorities = {}] = useOnyx(`${ONYXKEYS.ISSUES.COLLECTION_PRIORITIES}${props.title}`);
     const [activeId, setActiveId] = useState(null);
+    const prevPrioritiesRef = useRef();
 
     // Add local state for ordered issues so that it can be updated synchronously when the user drags an issue and drops it,
     // preventing the item from jumping back to its original position briefly
@@ -155,8 +187,16 @@ function PanelIssues(props) {
         if (!localOrder.length) {
             return;
         }
-        setLocalOrder([]);
-    }, [priorities, props.data, props.filters, props.hideIfHeld, props.hideIfUnderReview, props.hideIfOwnedBySomeoneElse, props.applyFilters, localOrder]);
+
+        // If priorities have changed since the last render, it means Onyx has updated.
+        // We can now clear localOrder as the persisted order should be reflected.
+        if (!_.isEqual(prevPrioritiesRef.current, priorities)) {
+            setLocalOrder([]);
+        }
+
+        // Update the ref to the current priorities for the next render.
+        prevPrioritiesRef.current = priorities;
+    }, [priorities, localOrder]);
 
     const collapseContent = useCallback(() => {
         togglePanel(props.panelID, !props.panel.isHidden);
@@ -170,12 +210,14 @@ function PanelIssues(props) {
         hideIfHeld: props.hideIfHeld,
         hideIfUnderReview: props.hideIfUnderReview,
         hideIfOwnedBySomeoneElse: props.hideIfOwnedBySomeoneElse,
+        hideIfNotOverdue: props.hideIfNotOverdue,
         applyFilters: props.applyFilters,
     }), [
         props.data,
         props.hideIfHeld,
         props.hideIfUnderReview,
         props.hideIfOwnedBySomeoneElse,
+        props.hideIfNotOverdue,
         props.applyFilters,
         props.filters,
         priorities,
