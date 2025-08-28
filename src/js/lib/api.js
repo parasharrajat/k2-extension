@@ -505,6 +505,7 @@ function getClosedIssuesAssigned() {
     query += ' repo:Expensify/Insiders';
     query += ' repo:Expensify/Expensify-Guides';
     query += ' repo:Expensify/react-native-onyx';
+    query += ' sort:updated-desc';
     query += ` assignee:${getCurrentUser()}`;
 
     const graphQLQuery = `

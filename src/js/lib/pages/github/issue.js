@@ -130,7 +130,7 @@ const renderAssignees = (issueOwner) => {
 const refreshPicker = function () {
     // Add our wrappers to the DOM which all the React components will be rendered into
     if ($('.k2picker-wrapper')) {
-        $('div[data-testid="issue-viewer-metadata-pane"] > :nth-child(4)') // Labels section in right side panel
+        $('div[data-testid="issue-viewer-metadata-pane"] > :nth-child(3)') // Labels section in right side panel
             .after(sidebarWrapperHTML);
     }
 
