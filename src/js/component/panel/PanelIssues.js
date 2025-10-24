@@ -160,7 +160,7 @@ function PanelIssues(props) {
 
     const collapseContent = useCallback(() => {
         togglePanel(props.panelID, !props.panel.isHidden);
-    }, [props.panel]);
+    }, [props.panel.isHidden, props.panelID]);
 
     const filteredData = useMemo(() => getOrderedFilteredIssues({
         issues: props.data,
