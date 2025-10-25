@@ -647,6 +647,12 @@ $color-dark-yellow: #daa520;
         line-height: 24px;
         letter-spacing: 0.043em;
         font-style: normal;
+        span {
+                font-size: 1.25rem;
+                letter-spacing: revert;
+                font-weight: 500;
+                font-stretch: condensed;
+            }
     }
     .amount {
         color: $color-green;
