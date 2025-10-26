@@ -62,7 +62,6 @@ function getOrderedFilteredPRs({
     }
 
     if (filters.hideCPlusReviewed) { prepared = _.filter(prepared, pr => !pr.isCPlusApproved); }
-    if (filters.pushCPlusDown) { prepared = _.sortBy(prepared, pr => (pr.isCPlusApproved ? 1 : 0)); }
 
     if (localOrder.length && localOrder.length === _.size(prepared)) {
         const dataById = _.indexBy(prepared, 'id');
@@ -98,6 +97,7 @@ function getOrderedFilteredPRs({
     return _.chain(prepared)
         .sortBy(ownerSortIteratee)
         .sortBy(priorityIteratee)
+        .sortBy(pr => (pr.isCPlusApproved ? 1 : 0))
         .value();
 }
 
