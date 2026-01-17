@@ -12,18 +12,33 @@
   },
 
   "permissions": [
-    "webNavigation"
+    "webNavigation",
+    "tabs",
+    "storage"
   ],
 
   "host_permissions": [
       "*://api.github.com/*"
   ],
 
-  "content_scripts": [{
+  "content_scripts": [
+    {
     "matches": ["*://*.github.com/*"],
     "css": ["content.css"],
     "js": ["content.js"]
-  }],
+  },
+  {
+    "matches": ["*://staging.new.expensify.com/*"],
+    "js": ["inject-main-world.js"],
+    "world": "MAIN",
+    "run_at": "document_end"
+  },
+    {
+    "matches": ["*://staging.new.expensify.com/*"],
+    "js": ["inject.js"],
+    "run_at": "document_end"
+  }
+],
 
   "background": {
     "service_worker": "events.js",

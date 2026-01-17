@@ -26,6 +26,8 @@ export default {
 
     PANEL: 'panel_',
 
+    C_PLUS_PAYMENT_INFO: 'cPlusPaymentInfo',
+
     COLLECTION: {
         C_PLUS_PAYMENT_STATUS: 'cpluspaymentstatus_',
     },

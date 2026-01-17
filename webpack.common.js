@@ -13,6 +13,8 @@ module.exports = (env) => {
         entry: {
             content: './src/js/content.js',
             events: './src/js/events.js',
+            inject: './src/js/inject.js',
+            'inject-main-world': './src/js/inject-main-world.js',
         },
         output: {
             filename: '[name].js',
