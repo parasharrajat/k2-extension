@@ -49,10 +49,20 @@ class RequestModal extends React.Component {
             return;
         }
         if (typeof this.props.cPlusPaymentStatus === 'string') {
-            this.setState({amount: ''});
+            this.setState(prevState => ({
+                requestModal: {
+                    ...prevState.requestModal,
+                    amount: '',
+                },
+            }));
             this.setActiveLabel(this.props.cPlusPaymentStatus, () => {}, () => {});
         } else {
-            this.setState({amount: this.props.cPlusPaymentStatus.amount});
+            this.setState(prevState => ({
+                requestModal: {
+                    ...prevState.requestModal,
+                    amount: this.props.cPlusPaymentStatus.amount,
+                },
+            }));
             this.setActiveLabel(this.props.cPlusPaymentStatus.status, () => {}, () => {});
         }
     }
