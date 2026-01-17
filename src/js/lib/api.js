@@ -9,7 +9,7 @@ let octokit;
  * @returns {Octokit}
  */
 function getOctokit() {
-    if (!octokit) {
+    if (!octokit && Preferences.getGitHubToken()) {
         /* eslint-disable-next-line no-console */
         console.log('authenticate with auth token', Preferences.getGitHubToken());
         octokit = new Octokit({

@@ -23,13 +23,14 @@ async function openBrowserTab(sender, url, payload) {
             }
         } else if (typeof chrome !== 'undefined' && chrome.tabs) {
             // Chrome
-            chrome.tabs.get(tabId, (tab) => {
-                if (chrome.runtime.lastError || !tab) {
-                    tabStillOpen = false;
-                } else {
+            try {
+                const tab = await chrome.tabs.get(tabId);
+                if (tab) {
                     tabStillOpen = true;
                 }
-            });
+            } catch (e) {
+                tabStillOpen = false;
+            }
         }
 
         if (tabStillOpen) {
@@ -75,10 +76,10 @@ function setup() {
             // then we will send a message to the contentscript called 'makeMoneyrequest' with payload data.
 
                 await openBrowserTab(sender, message.url, message.payload);
-                const hasContentLoaded = actionTab ? JSON.parse(actionTab).hasContentLoaded : false;
+                const hasContentLoaded = actionTab ? actionTab.hasContentLoaded : false;
                 if (hasContentLoaded) {
                 // send message to content script to make money request
-                    const tabId = JSON.parse(actionTab).id || JSON.parse(actionTab).tabId;
+                    const tabId = actionTab.id || actionTab.tabId;
                     chrome.tabs.sendMessage(
                         tabId,
                         {

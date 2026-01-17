@@ -11,7 +11,6 @@ ReactNativeOnyx.connect({
         if (!preferences) {
             return;
         }
-
         ghToken = preferences.ghToken;
         useAbsoluteTimestamps = !!preferences.useAbsoluteTimestamps;
         k2RepoUrl = preferences.k2RepoUrl;
