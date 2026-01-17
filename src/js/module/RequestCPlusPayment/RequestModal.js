@@ -136,7 +136,7 @@ class RequestModal extends React.Component {
         if (this.state.requestModal.url) {
             msg = `Payment requested as per ${this.state.requestModal.url}`;
         }
-        // API.addComment(msg);
+        API.addComment(msg);
         $('#confirm-request')[0].close();
     }
 
