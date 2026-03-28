@@ -73,10 +73,12 @@ function RequestModal({issueID}) {
     }, []);
 
     const closeModal = useCallback(() => {
+        // eslint-disable-next-line es/no-optional-chaining
         dialogRef.current?.close();
     }, []);
 
     const showModal = useCallback(() => {
+        // eslint-disable-next-line es/no-optional-chaining
         dialogRef.current?.showModal();
     }, []);
 
@@ -220,6 +222,5 @@ function RequestModal({issueID}) {
 
 RequestModal.propTypes = propTypes;
 RequestModal.defaultProps = defaultProps;
-
 
 export default RequestModal;
