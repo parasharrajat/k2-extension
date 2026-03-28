@@ -1,283 +1,251 @@
 /* eslint-disable es/no-optional-chaining */
-import React from 'react';
+import React, {
+    useState, useEffect, useCallback, useMemo,
+} from 'react';
 import _ from 'underscore';
-import PropTypes from 'prop-types';
-import {withOnyx} from 'react-native-onyx';
+import {useOnyx} from 'react-native-onyx';
 import Panel from '../../component/Panel';
 import ONYXKEYS from '../../ONYXKEYS';
-import IssuePropTypes from '../../component/list-item/IssuePropTypes';
 import RequestPayment from '../../lib/actions/RequestPayment';
-
-const propTypes = {
-    issues: PropTypes.objectOf(IssuePropTypes),
-
-    /** closed issues */
-    issuesClosed: PropTypes.objectOf(IssuePropTypes),
-    // eslint-disable-next-line react/forbid-prop-types
-    cPlusStatus: PropTypes.any,
-};
-const defaultProps = {
-    issues: {},
-    cPlusStatus: {},
-    issuesClosed: {},
-};
 
 function getIDfromCollectionkey(collection, key) {
     return key.replace(collection, '');
 }
-class BudgetPlanner extends React.Component {
-    constructor(props) {
-        super(props);
 
-        this.state = {
-            pendingAmount: 0,
-            futureAmount: 0,
-            // eslint-disable-next-line react/no-unused-state
-            predictions: 0,
-        };
-    }
+function BudgetPlanner() {
+    const [issues] = useOnyx(ONYXKEYS.ISSUES.ASSIGNED);
+    const [issuesClosed] = useOnyx(ONYXKEYS.ISSUES.CLOSED_100);
+    const [cPlusStatus] = useOnyx(ONYXKEYS.COLLECTION.C_PLUS_PAYMENT_STATUS);
 
-    componentDidMount() {
-        this.calculatePayments();
-        this.createIssueMap();
-    }
+    console.debug('cPlusStatus', cPlusStatus);
 
-    componentDidUpdate(prevProps) {
-        if (_.isEqual(this.props.issues, prevProps.issues)) {
-            return;
-        }
-        this.calculatePayments();
-        this.createIssueMap();
-    }
+    const [pendingAmount, setPendingAmount] = useState(0);
+    const [futureAmount, setFutureAmount] = useState(0);
+    // eslint-disable-next-line no-unused-vars
+    const [predictions, setPredictions] = useState(0);
 
-    removeRequested = (e, issueID) => {
+    const removeRequested = useCallback((e, issueID) => {
         e.preventDefault();
         RequestPayment.removeCPlusPaymentSatus(issueID);
-    };
+    }, []);
 
-    createIssueMap() {
-        const issuesMap = {};
-        _.forEach(this.props.issues, (issue) => {
-            issuesMap[issue.number] = issue;
+    const issuesMap = useMemo(() => {
+        const map = {};
+        _.forEach(issues, (issue) => {
+            map[issue.number] = issue;
         });
-        _.forEach(this.props.issuesClosed, (issue) => {
-            issuesMap[issue.number] = issue;
+        _.forEach(issuesClosed, (issue) => {
+            map[issue.number] = issue;
         });
-        this.issuesMap = issuesMap;
-    }
+        return map;
+    }, [issues, issuesClosed]);
 
-    calculatePayments() {
-        if (!_.size(this.props.issues)) {
+    const calculatePayments = useCallback(() => {
+        if (!_.size(issues)) {
+            setFutureAmount(0);
+            setPendingAmount(0);
             return;
         }
-        let futureAmount = 0;
-        let pendingAmount = 0;
-        _.forEach(this.props.issues, (issue) => {
-            const matchAmount = /.*\$([\d,]*)/ig;
-            const matchStatus = /(HOLD for payment)+/ig;
-            const matchedAmount = matchAmount.exec(issue.title);
-            const matchedStatus = matchStatus.exec(issue.title);
+        let currentFutureAmount = 0;
+        let currentPendingAmount = 0;
+        _.forEach(issues, (issue) => {
+            const matchAmountRegex = /.*\$([\d,]*)/i; // Use 'i' for case-insensitive, remove 'g' for single match
+            const matchStatusRegex = /(HOLD for payment)+/i; // Use 'i' for case-insensitive, remove 'g' for single match
+
+            const matchedAmount = matchAmountRegex.exec(issue.title);
+            const matchedStatus = matchStatusRegex.exec(issue.title);
+
             if (!matchedAmount) {
                 return;
             }
             if (matchedStatus && matchedStatus[1]) {
-                pendingAmount += matchedAmount[1] ? parseInt(matchedAmount[1].replace(',', ''), 10) : 0;
+                currentPendingAmount += matchedAmount[1] ? parseInt(matchedAmount[1].replace(/,/g, ''), 10) : 0;
             } else {
-                futureAmount += matchedAmount[1] ? parseInt(matchedAmount[1].replace(',', ''), 10) : 0;
+                currentFutureAmount += matchedAmount[1] ? parseInt(matchedAmount[1].replace(/,/g, ''), 10) : 0;
             }
         });
-        this.setState({futureAmount, pendingAmount});
-    }
+        setFutureAmount(currentFutureAmount);
+        setPendingAmount(currentPendingAmount);
+    }, [issues]);
 
-    checkStatus(cplusstatus, matchWith) {
+    const checkStatus = useCallback((cplusstatus, matchWith) => {
         if (!cplusstatus) {
             return false;
         }
         if (typeof cplusstatus === 'string') {
             return cplusstatus === matchWith;
         }
-        return cplusstatus.status === matchWith;
-    }
+        return cplusstatus.status === matchWith; // Assuming cplusstatus is an object with a 'status' property
+    }, []);
 
-    render() {
-        if (!this.props.issues) {
-            return (
-                <div className="blankslate capped clean-background">
-                    Loading
-                </div>
-            );
-        }
+    useEffect(() => {
+        calculatePayments();
+    }, [issues, calculatePayments]);
 
-        const pendingRequests = _.chain(this.props.cPlusStatus)
-            .keys()
-            .filter(key => this.checkStatus(this.props.cPlusStatus[key], 'Pending Payment'))
-            .value() || [];
-
-        const pendingRequestsOpen = _.filter(pendingRequests, (key) => {
-            const id = getIDfromCollectionkey(ONYXKEYS.COLLECTION.C_PLUS_PAYMENT_STATUS, key);
-            return !this.issuesMap?.[id]?.closed;
-        });
-
-        const pendingRequestsClosed = _.filter(pendingRequests, (key) => {
-            const id = getIDfromCollectionkey(ONYXKEYS.COLLECTION.C_PLUS_PAYMENT_STATUS, key);
-            return this.issuesMap?.[id]?.closed;
-        });
-
-        const pendingRequestsOpenAmount = _.reduce(pendingRequestsOpen, (total, key) => parseInt(this.props.cPlusStatus[key].amount, 10) + total, 0);
-        const pendingRequestsClosedAmount = _.reduce(pendingRequestsClosed, (total, key) => parseInt(this.props.cPlusStatus[key].amount, 10) + total, 0);
-
-        const requestedRequests = _.chain(this.props.cPlusStatus)
-            .keys()
-            .filter(key => this.checkStatus(this.props.cPlusStatus[key], 'Requested')).value() || [];
-
+    if (!issues) {
         return (
-            <div className="mb-3">
-                <div className="d-flex flex-row budget-planner">
-                    <div className="col-12">
-                        <Panel
-                            panelID="budget"
-                            title="Budget Planner"
-                        >
-                            <div className="p-4">
-                                <div className="d-flex flex-row ">
-                                    <div className="col-3 pr-4">
-                                        <div>
-                                            <h5>Pending Jobs&apos;</h5>
-                                            <p className="amount">
-                                                $
-                                                {this.state.pendingAmount}
-                                            </p>
-                                        </div>
-
-                                    </div>
-                                    <div className="col-3 pr-4">
-                                        <div>
-                                            <h5>Future Jobs&apos;</h5>
-                                            <p className="amount">
-                                                $
-                                                {this.state.futureAmount}
-                                            </p>
-                                        </div>
-                                    </div>
-                                    <div className="col-3 pr-4">
-                                        <div>
-                                            <h5>Pending Finished Jobs&apos;</h5>
-                                            <p className="amount">
-                                                $
-                                                {_.reduce(pendingRequests, (total, key) => parseInt(this.props.cPlusStatus[key].amount, 10) + total, 0)}
-                                            </p>
-                                        </div>
-                                    </div>
-                                    <div className="col-3 pr-4">
-                                        <div>
-                                            <h5>Requested Finished Jobs&apos;</h5>
-                                            <p className="amount">
-                                                $
-                                                {_.reduce(requestedRequests, (total, key) => parseInt(this.props.cPlusStatus[key].amount, 10) + total, 0)}
-                                            </p>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div className="d-flex flex-row">
-                                    <div className="col-8 pr-4">
-                                        <div className="border p-3 rounded">
-
-                                            <div className="d-flex flex-row">
-                                                <div className="col-6">
-                                                    <h5 className="h4 mb-2 text-light">
-                                                        Pending Requests
-                                                        {' '}
-                                                        <span>
-                                                            (Total $
-                                                            {pendingRequestsOpenAmount}
-                                                            )
-                                                        </span>
-                                                    </h5>
-                                                    {_.map(pendingRequestsOpen, (key) => {
-                                                        const id = getIDfromCollectionkey(ONYXKEYS.COLLECTION.C_PLUS_PAYMENT_STATUS, key);
-                                                        return (
-                                                            <a className="IssueLabel color-fg-on-emphasis color-bg-severe-emphasis" href={`https://github.com/Expensify/App/issues/${id}`}>
-                                                                #
-                                                                {id}
-                                                                <span className="IssueLabel IssueAmountLabel color-bg-subtle color-fg-severe">{this.props.cPlusStatus[key]?.amount}</span>
-                                                            </a>
-                                                        );
-                                                    })}
-                                                </div>
-                                                <div className="col-6">
-
-                                                    <h5 className="h4 mb-2 text-light">
-                                                        Pending Closed Requests
-                                                        {' '}
-                                                        <span>
-                                                            (Total $
-                                                            {pendingRequestsClosedAmount}
-                                                            )
-                                                        </span>
-                                                    </h5>
-                                                    {_.map(pendingRequestsClosed, (key) => {
-                                                        const id = getIDfromCollectionkey(ONYXKEYS.COLLECTION.C_PLUS_PAYMENT_STATUS, key);
-                                                        return (
-                                                            <a className="IssueLabel color-fg-on-emphasis color-bg-closed-emphasis" href={`https://github.com/Expensify/App/issues/${id}`}>
-                                                                #
-                                                                {id}
-                                                                <span className="IssueLabel IssueAmountLabel color-bg-subtle color-fg-severe">{this.props.cPlusStatus[key]?.amount}</span>
-                                                            </a>
-                                                        );
-                                                    })}
-                                                </div>
-
-                                            </div>
-
-                                        </div>
-                                    </div>
-                                    <div className="col-4 pr-4">
-                                        <div className="border p-3 rounded">
-                                            <h5 className="h4 mb-2 text-light">
-                                                Requested
-                                            </h5>
-                                            {_.map(requestedRequests, (key) => {
-                                                const id = getIDfromCollectionkey(ONYXKEYS.COLLECTION.C_PLUS_PAYMENT_STATUS, key);
-                                                const className = this.issuesMap?.[id]?.closed ? 'color-bg-closed-emphasis' : 'color-bg-open-emphasis';
-                                                return (
-                                                    <a className={`IssueLabel color-fg-on-emphasis ${className}`} href={`https://github.com/Expensify/App/issues/${id}`}>
-                                                        #
-                                                        {id}
-                                                        <span className="IssueAmountLabel IssueLabel color-bg-subtle fgColor-open">{this.props.cPlusStatus[key]?.amount}</span>
-                                                        <button
-                                                            type="button"
-                                                            className="IssueAmountLabel IssueLabel bgColor-transparent fgColor-onEmphasis fgColor-open text-small"
-                                                            onClick={e => this.removeRequested(e, id)}
-                                                        >
-                                                            X
-                                                        </button>
-                                                    </a>
-                                                );
-                                            })}
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </Panel>
-
-                    </div>
-                </div>
+            <div className="blankslate capped clean-background">
+                Loading
             </div>
         );
     }
+
+    const pendingRequests = _.chain(cPlusStatus)
+        .keys()
+        .filter(key => checkStatus(cPlusStatus[key], 'Pending Payment'))
+        .value() || [];
+
+    const pendingRequestsOpen = _.filter(pendingRequests, (key) => {
+        const id = getIDfromCollectionkey(ONYXKEYS.COLLECTION.C_PLUS_PAYMENT_STATUS, key);
+        return !issuesMap?.[id]?.closed;
+    });
+
+    const pendingRequestsClosed = _.filter(pendingRequests, (key) => {
+        const id = getIDfromCollectionkey(ONYXKEYS.COLLECTION.C_PLUS_PAYMENT_STATUS, key);
+        return issuesMap?.[id]?.closed;
+    });
+
+    const pendingRequestsOpenAmount = _.reduce(pendingRequestsOpen, (total, key) => parseInt(cPlusStatus[key].amount, 10) + total, 0);
+    const pendingRequestsClosedAmount = _.reduce(pendingRequestsClosed, (total, key) => parseInt(cPlusStatus[key].amount, 10) + total, 0);
+
+    const requestedRequests = _.chain(cPlusStatus)
+        .keys()
+        .filter(key => checkStatus(cPlusStatus[key], 'Requested')).value() || [];
+
+    return (
+        <div className="mb-3">
+            <div className="d-flex flex-row budget-planner">
+                <div className="col-12">
+                    <Panel
+                        panelID="budget"
+                        title="Budget Planner"
+                    >
+                        <div className="p-4">
+                            <div className="d-flex flex-row ">
+                                <div className="col-3 pr-4">
+                                    <div>
+                                        <h5>Pending Jobs&apos;</h5>
+                                        <p className="amount">
+                                            $
+                                            {pendingAmount}
+                                        </p>
+                                    </div>
+
+                                </div>
+                                <div className="col-3 pr-4">
+                                    <div>
+                                        <h5>Future Jobs&apos;</h5>
+                                        <p className="amount">
+                                            $
+                                            {futureAmount}
+                                        </p>
+                                    </div>
+                                </div>
+                                <div className="col-3 pr-4">
+                                    <div>
+                                        <h5>Pending Finished Jobs&apos;</h5>
+                                        <p className="amount">
+                                            $
+                                            {_.reduce(pendingRequests, (total, key) => parseInt(cPlusStatus[key].amount, 10) + total, 0)}
+                                        </p>
+                                    </div>
+                                </div>
+                                <div className="col-3 pr-4">
+                                    <div>
+                                        <h5>Requested Finished Jobs&apos;</h5>
+                                        <p className="amount">
+                                            $
+                                            {_.reduce(requestedRequests, (total, key) => parseInt(cPlusStatus[key].amount, 10) + total, 0)}
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div className="d-flex flex-row">
+                                <div className="col-8 pr-4">
+                                    <div className="border p-3 rounded">
+
+                                        <div className="d-flex flex-row">
+                                            <div className="col-6">
+                                                <h5 className="h4 mb-2 text-light">
+                                                    Pending Requests
+                                                    {' '}
+                                                    <span>
+                                                        (Total $
+                                                        {pendingRequestsOpenAmount}
+                                                        )
+                                                    </span>
+                                                </h5>
+                                                {_.map(pendingRequestsOpen, (key) => {
+                                                    const id = getIDfromCollectionkey(ONYXKEYS.COLLECTION.C_PLUS_PAYMENT_STATUS, key);
+                                                    return (
+                                                        <a className="IssueLabel color-fg-on-emphasis color-bg-severe-emphasis" href={`https://github.com/Expensify/App/issues/${id}`}>
+                                                            #
+                                                            {id}
+                                                            <span className="IssueLabel IssueAmountLabel color-bg-subtle color-fg-severe">{cPlusStatus[key]?.amount}</span>
+                                                        </a>
+                                                    );
+                                                })}
+                                            </div>
+                                            <div className="col-6">
+
+                                                <h5 className="h4 mb-2 text-light">
+                                                    Pending Closed Requests
+                                                    {' '}
+                                                    <span>
+                                                        (Total $
+                                                        {pendingRequestsClosedAmount}
+                                                        )
+                                                    </span>
+                                                </h5>
+                                                {_.map(pendingRequestsClosed, (key) => {
+                                                    const id = getIDfromCollectionkey(ONYXKEYS.COLLECTION.C_PLUS_PAYMENT_STATUS, key);
+                                                    return (
+                                                        <a className="IssueLabel color-fg-on-emphasis color-bg-closed-emphasis" href={`https://github.com/Expensify/App/issues/${id}`}>
+                                                            #
+                                                            {id}
+                                                            <span className="IssueLabel IssueAmountLabel color-bg-subtle color-fg-severe">{cPlusStatus[key]?.amount}</span>
+                                                        </a>
+                                                    );
+                                                })}
+                                            </div>
+
+                                        </div>
+
+                                    </div>
+                                </div>
+                                <div className="col-4 pr-4">
+                                    <div className="border p-3 rounded">
+                                        <h5 className="h4 mb-2 text-light">
+                                            Requested
+                                        </h5>
+                                        {_.map(requestedRequests, (key) => {
+                                            const id = getIDfromCollectionkey(ONYXKEYS.COLLECTION.C_PLUS_PAYMENT_STATUS, key);
+                                            const className = issuesMap?.[id]?.closed ? 'color-bg-closed-emphasis' : 'color-bg-open-emphasis';
+                                            return (
+                                                <a className={`IssueLabel color-fg-on-emphasis ${className}`} href={`https://github.com/Expensify/App/issues/${id}`}>
+                                                    #
+                                                    {id}
+                                                    <span className="IssueAmountLabel IssueLabel color-bg-subtle fgColor-open">{cPlusStatus[key]?.amount}</span>
+                                                    <button
+                                                        type="button"
+                                                        className="IssueAmountLabel IssueLabel bgColor-transparent fgColor-onEmphasis fgColor-open text-small"
+                                                        onClick={e => removeRequested(e, id)}
+                                                    >
+                                                        X
+                                                    </button>
+                                                </a>
+                                            );
+                                        })}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </Panel>
+
+                </div>
+            </div>
+        </div>
+    );
 }
 
-BudgetPlanner.propTypes = propTypes;
-BudgetPlanner.defaultProps = defaultProps;
-
-export default withOnyx({
-    issues: {
-        key: ONYXKEYS.ISSUES.ASSIGNED,
-    },
-    issuesClosed: {
-        key: ONYXKEYS.ISSUES.CLOSED_100,
-    },
-    cPlusStatus: {
-        key: ONYXKEYS.COLLECTION.C_PLUS_PAYMENT_STATUS,
-    },
-})(BudgetPlanner);
+export default BudgetPlanner;
