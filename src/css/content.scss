@@ -55,66 +55,34 @@ $color-dark-yellow: #daa520;
 .k2-improvement,
 .k2-task,
 .k2-external,
-.k2-newfeature {
-    background-image: none !important;
+.k2-newfeature,
+.k2-concierge-dont-reopen {
+  background-image: none !important;
 }
 
-.k2-hourly.active {
-    background-color: $color-alert !important;
-}
-.k2-daily.active {
-    background-color: $color-orange !important;
-    color: white;
-}
-.k2-weekly.active {
-    background-color: $color-green !important;
-    color: white;
-}
-.k2-monthly.active {
-    background-color: $color-purple !important;
-}
-.k2-web.active {
-    background-color: #274073 !important;
-    color: white;
-}
-.k2-core.active {
-    background-color: #ff0066 !important;
-    color: white;
-}
-.k2-integration.server.active {
-    background-color: #c7def8 !important;
-}
-.k2-design.active {
-    background-color: #00a4d3 !important;
-    color: white;
-}
-.k2-ops.active,
-.k2-requested.active {
-    background-color: #37916c !important;
-    color: white;
-}
-.k2-infra.active {
-    background-color: #181c99 !important;
-    color: white;
-}
-.k2-improvement.active {
-    background-color: #604c8d !important;
-    color: white;
-}
-.k2-task.active,
+.k2-hourly.active { background-color: $color-alert !important; }
+.k2-daily.active { background-color: $color-orange !important; color: white; }
+.k2-weekly.active { background-color: $color-green !important; color: white; }
+.k2-monthly.active { background-color: $color-purple !important; }
+.k2-web.active { background-color: #274073 !important; color: white; }
+.k2-core.active { background-color: #ff0066 !important; color: white; }
+.k2-integration.server.active { background-color: #c7def8 !important; }
+.k2-design.active { background-color: #00a4d3 !important; color: white; }
+.k2-ops.active { background-color: #37916C !important; color: white; }
+.k2-infra.active { background-color: #181c99 !important; color: white; }
+.k2-improvement.active { background-color: #604c8d !important; color: white; }
+.k2-task.active { background-color: #9C5959 !important; color: white; }
+.k2-newfeature.active { background-color: #A52A2A !important; color: white; }
+.k2-external.active { background-color: #A7B8EF !important; color: white; }
+.k2-concierge-dont-reopen.active { background-color: #f46d58 !important; color: white; }
 .k2-pending-payment.active {
     background-color: #9c5959 !important;
     color: white;
 }
-.k2-newfeature.active {
-    background-color: #a52a2a !important;
+.k2-requested.active {
+    background-color: #37916c !important;
     color: white;
 }
-.k2-external.active {
-    background-color: #a7b8ef !important;
-    color: white;
-}
-
 .k2-reviewing {
     &.active {
         background-color: $color-neutral;
@@ -239,10 +207,16 @@ $color-dark-yellow: #daa520;
 }
 
 .panel-title {
-    background: $color-neutral-lighter;
-    font-size: 14px;
-    margin: 0px;
-    padding: $gutter ($gutter * 2);
+  background: $color-neutral-lighter;
+  font-size: 14px;
+  margin: 0px;
+  padding: $gutter ($gutter * 2);
+
+  &.panel-title-with-actions {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
 }
 
 .panel-item {
@@ -254,6 +228,21 @@ $color-dark-yellow: #daa520;
         float: right !important;
         top: -5px;
     }
+  &.reviewed {
+    color: $color-neutral-light !important;
+    .issue, .panel-item-meta {
+      color: $color-neutral-light !important;
+    }
+    .github-actions-status, .mergeable-state {
+      color: color.mix($color-neutral-light, $color-dark-yellow, 75%) !important;
+      &.success, &.MERGEABLE:not(.CHANGES_REQUESTED):not(.REVIEW_REQUIRED) {
+        color: color.mix($color-neutral-light, $color-darker-green, 75%) !important;
+      }
+      &.failure, &.CONFLICTING, &.CHANGES_REQUESTED {
+        color: color.mix($color-neutral-light, $color-alert, 75%) !important;
+      }
+    }
+  }
 }
 
 .panel-item-meta {
@@ -377,6 +366,20 @@ $color-dark-yellow: #daa520;
         > div {
             line-height: 1.5em;
         }
+    }
+}
+
+.github-actions-status {
+  color: $color-orange;
+
+    &.success {
+        color: $color-darker-green;
+    }
+    &.failure {
+        color: $color-alert;
+    }
+    &.unknown {
+        color: $color-neutral;
     }
 }
 
@@ -687,6 +690,12 @@ $color-dark-yellow: #daa520;
     border: 1px solid rgb(221, 221, 221);
 }
 
+.search-filter-input {
+  margin-left: 10px;
+  padding: 4px 8px;
+  border-radius: 4px;
+}
+
 @media (prefers-color-scheme: dark) {
     .panel,
     .panel-item,
@@ -895,6 +904,106 @@ $color-dark-yellow: #daa520;
     font-weight: bold;
 }
 
-.custom-markdown-copy {
-    cursor: pointer;
+// Issue template chooser enhancements (search, sort, blank issue)
+.k2-template-search {
+    padding: 8px 16px;
+    border-bottom: 1px solid var(--borderColor-muted, var(--color-border-muted, #d0d7de));
+
+    .k2-template-search-input {
+        width: 100%;
+        padding: 5px 12px;
+        font-size: 14px;
+        line-height: 20px;
+        border: 1px solid var(--borderColor-default, var(--color-border-default, #d0d7de));
+        border-radius: 6px;
+        background-color: var(--bgColor-default, var(--color-canvas-default, #ffffff));
+        color: var(--fgColor-default, var(--color-fg-default, #1f2328));
+
+        &::placeholder {
+            color: var(--fgColor-muted, var(--color-fg-muted, #656d76));
+        }
+
+        &:focus {
+            outline: none;
+            border-color: var(--borderColor-accent-emphasis, var(--color-accent-emphasis, #0969da));
+            box-shadow: 0 0 0 3px rgba(9, 105, 218, 0.3);
+        }
+    }
+}
+
+@media (prefers-color-scheme: dark) {
+    .k2-template-search {
+        border-bottom-color: var(--borderColor-muted, #30363d);
+
+        .k2-template-search-input {
+            border-color: var(--borderColor-default, #30363d);
+            background-color: var(--bgColor-default, #0d1117);
+            color: var(--fgColor-default, #e6edf3);
+
+            &::placeholder {
+                color: var(--fgColor-muted, #8b949e);
+            }
+
+            &:focus {
+                border-color: var(--borderColor-accent-emphasis, #1f6feb);
+                box-shadow: 0 0 0 3px rgba(31, 111, 235, 0.3);
+            }
+        }
+    }
+}
+
+// K2 navigation tab
+li.k2-extension {
+    display: flex;
+    align-items: center;
+}
+
+.k2-nav-link {
+    display: flex;
+    align-items: center;
+    padding: 8px 16px;
+    font-size: 14px;
+    font-weight: 400;
+    line-height: 1.5;
+    color: var(--fgColor-default, #1f2328);
+    text-decoration: none;
+    white-space: nowrap;
+    border-radius: 6px;
+    transition: background-color 0.1s ease;
+
+    &:hover {
+        color: var(--fgColor-default, #1f2328);
+        text-decoration: none;
+        background-color: var(--bgColor-neutral-muted, rgba(175, 184, 193, 0.2));
+    }
+
+    &.selected,
+    &[aria-current="page"] {
+        font-weight: 600;
+    }
+}
+
+// When on K2 page, override GitHub's tab styling so only K2 looks selected
+body.k2-page-active {
+    nav[aria-label="Repository"] a[aria-current="page"]:not(.k2-nav-link) {
+        font-weight: 400 !important;
+        background-color: transparent !important;
+        box-shadow: none !important;
+    }
+
+    nav[aria-label="Repository"] a[aria-current="page"]:not(.k2-nav-link)::after,
+    nav[aria-label="Repository"] a[aria-current="page"]:not(.k2-nav-link)::before {
+        display: none !important;
+    }
+}
+
+@media (prefers-color-scheme: dark) {
+    .k2-nav-link {
+        color: var(--fgColor-default, #e6edf3);
+
+        &:hover {
+            color: var(--fgColor-default, #e6edf3);
+            background-color: var(--bgColor-neutral-muted, rgba(110, 118, 129, 0.4));
+        }
+    }
 }

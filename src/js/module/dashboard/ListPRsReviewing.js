@@ -27,6 +27,7 @@ import ListItemPull from '../../component/list-item/ListItemPull';
 import * as PullRequests from '../../lib/actions/PullRequests';
 import * as Issues from '../../lib/actions/Issues';
 import filterPropTypes from '../../lib/filterPropTypes';
+import openAllUrls from '../../lib/openAllUrls';
 
 // Label used to store priorities in Onyx (like PanelIssues uses the panel title)
 const PRIORITY_LABEL = 'PRsReviewing';
@@ -211,7 +212,7 @@ function ListPRsReviewing(props) {
 
     return (
         <div className="panel mb-3 daily">
-            <Title text="Review these PRs Daily" count={_.size(filteredPRs) || 0} />
+            <Title text="Review these PRs Daily" count={_.size(filteredPRs) || 0} onOpenAll={() => openAllUrls(filteredPRs)} />
 
             {!props.prs && <div className="blankslate capped clean-background">Loading</div>}
 

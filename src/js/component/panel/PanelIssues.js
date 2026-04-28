@@ -26,6 +26,7 @@ import filterPropTypes from '../../lib/filterPropTypes';
 import {togglePanel} from '../../lib/actions/dashboard';
 import * as Issues from '../../lib/actions/Issues';
 import SortableIssue from '../list-item/SortableIssue';
+import openAllUrls from '../../lib/openAllUrls';
 
 const propTypes = {
     /** A CSS class to add to this panel to give it some color */
@@ -233,6 +234,7 @@ function PanelIssues(props) {
                     text={props.title}
                     count={_.size(filteredData) || 0}
                     onClick={collapseContent}
+                    onOpenAll={() => openAllUrls(filteredData)}
                 />
                 <div className={`collapse ${props.panel.isHidden ? 'hidden' : ''}`}>
                     {!_.size(filteredData) ? (
