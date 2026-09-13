@@ -9,6 +9,7 @@ const propTypes = {
     count: PropTypes.number,
 
     onClick: PropTypes.func,
+
     /** Callback to open all items in new tabs */
     onOpenAll: PropTypes.func,
 };
