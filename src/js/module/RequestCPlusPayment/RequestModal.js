@@ -27,6 +27,7 @@ function RequestModal({issueID}) {
         title: '',
         url: '',
         amount: 250,
+        preventIssueComment: false,
     });
 
     // Effect for initial title load from DOM, runs once on mount
@@ -93,7 +94,9 @@ function RequestModal({issueID}) {
         if (requestModal.url) {
             msg = `Payment requested as per ${requestModal.url}`;
         }
-        API.addComment(msg);
+        if (!requestModal.preventIssueComment) {
+            API.addComment(msg);
+        }
         closeModal();
     }, [issueID, requestModal, closeModal]);
 
@@ -188,6 +191,19 @@ function RequestModal({issueID}) {
                         className="input-block form-control mb-2"
                         placeholder="Enter payment amount"
                     />
+                    <div className="form-check mb-2">
+                        <input
+                            type="checkbox"
+                            id="prevent-issue-comment"
+                            name="prevent-issue-comment"
+                            checked={requestModal.preventIssueComment}
+                            onChange={e => updateModalInput('preventIssueComment', e.target.checked)}
+                            className="form-check-input"
+                        />
+                        <label className="form-check-label" htmlFor="prevent-issue-comment">
+                            Don&apos;t add a comment to this issue
+                        </label>
+                    </div>
                     <div className="d-flex mt-5">
                         <button
                             type="submit"
